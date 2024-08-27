@@ -37,24 +37,41 @@ const ApplicationForm = () => {
     }
   };
 
-  const getErrorMessage = (error: any) => {
-    if (error?.message) {
-      return error.message;
+  const DocumentUpload = () => {
+    const [uploadedDocuments, setUploadedDocuments] = useState<string[]>([]);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files ? event.target.files[0] : null;
+      if (file) {
+        setSelectedFile(file);
+        // You can add logic to upload the file and then update the document list
+        setUploadedDocuments((prevDocs) => [...prevDocs, file.name]);
+      }
     }
-    return "Invalid value";
   };
 
-  const nextStep = () => {
-    setStep((prev) => Math.min(prev + 1, 2)); // Move to next step
-  };
+    const getErrorMessage = (error: any) => {
+      if (error?.message) {
+        return error.message;
+      }
+      return "Invalid value";
+    };
 
-  const prevStep = () => {
-    setStep((prev) => Math.max(prev - 1, 0)); // Move to previous step
-  };
+    const nextStep = () => {
+      setStep((prev) => Math.min(prev + 1, 3)); // Move to next step
+    };
+
+    const prevStep = () => {
+      setStep((prev) => Math.max(prev - 1, 0)); // Move to previous step
+    };
 
   return (
     <div className="w-full mx-auto mt-12 p-5 rounded-lg bg-transparent flex-col gap-4">
-      <h2 className="text-2xl font-bold mb-6">Student Detail Form</h2>
+      <h2 className="text-2xl font-bold mb-6 text-center">Student Detail Form</h2>
+      <hr />
+      <hr />
+      <hr />
       <form onSubmit={handleSubmit(onSubmit)}>
         {step === 0 && (
           <div>
@@ -171,10 +188,12 @@ const ApplicationForm = () => {
               <div className="mb-4 w-68 lg:w-72 xl:w-96">
                 <label className="block mb-1">Date Of Birth</label>
                 <input
+                  type="date"
                   {...register("dateOfBirth")}
                   placeholder="Enter Date Of Birth"
                   className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#56B280]"
                 />
+
                 {errors.dateOfBirth && (
                   <p className="text-red-500 text-sm mt-1">
                     {getErrorMessage(errors.dateOfBirth)}
@@ -189,6 +208,19 @@ const ApplicationForm = () => {
           <div>
             <h1>Contact Details</h1>
             <div className="flex flex-wrap gap-4 justify-between">
+              <div className="mb-4 w-68 lg:w-72 xl:w-96">
+                <label className="block mb-1">Email</label>
+                <input
+                  {...register("email")}
+                  placeholder="Enter Email"
+                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#56B280]"
+                />
+                {errors.alternateEmail && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {getErrorMessage(errors.email)}
+                  </p>
+                )}
+              </div>
               <div className="mb-4 w-68 lg:w-72 xl:w-96">
                 <label className="block mb-1">Alternate Email</label>
                 <input
@@ -228,6 +260,35 @@ const ApplicationForm = () => {
                   </p>
                 )}
               </div>
+            </div>
+            {/* Aadhar Number */}
+            <div className="mb-4 w-68 lg:w-72 xl:w-96">
+              <label className="block mb-1">Aadhar Number</label>
+              <input
+                {...register("aadharNumber")}
+                placeholder="Enter Aadhar Number"
+                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#56B280]"
+              />
+              {errors.aadharNumber && (
+                <p className="text-red-500 text-sm mt-1">
+                  {getErrorMessage(errors.aadharNumber)}
+                </p>
+              )}
+            </div>
+
+            {/* PAN Number */}
+            <div className="mb-4 w-68 lg:w-72 xl:w-96">
+              <label className="block mb-1">PAN Number</label>
+              <input
+                {...register("panNumber")}
+                placeholder="Enter PAN Number"
+                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#56B280]"
+              />
+              {errors.panNumber && (
+                <p className="text-red-500 text-sm mt-1">
+                  {getErrorMessage(errors.panNumber)}
+                </p>
+              )}
             </div>
             <div className="flex flex-wrap gap-4 justify-between">
               <div className="mb-4 w-68 lg:w-72 xl:w-96">
@@ -290,6 +351,45 @@ const ApplicationForm = () => {
           <div>
             <h1>Academic Details</h1>
             <div className="flex flex-wrap gap-4 justify-between">
+            <div className="mb-4 w-68 lg:w-72 xl:w-96">
+                <label className="block mb-1">Course Type</label>
+                <input
+                  {...register("courseType")}
+                  placeholder="Enter Course Type"
+                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#56B280]"
+                />
+                {errors.courseType && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {getErrorMessage(errors.courseType)}
+                  </p>
+                )}
+              </div>
+              <div className="mb-4 w-68 lg:w-72 xl:w-96">
+                <label className="block mb-1">Admission Year</label>
+                <input
+                  {...register("admissionYear")}
+                  placeholder="Enter Admission Year"
+                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#56B280]"
+                />
+                {errors.admissionYear && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {getErrorMessage(errors.admissionYear)}
+                  </p>
+                )}
+              </div>
+              <div className="mb-4 w-68 lg:w-72 xl:w-96">
+                <label className="block mb-1">Department Name</label>
+                <input
+                  {...register("departmentName")}
+                  placeholder="Enter Department Name"
+                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#56B280]"
+                />
+                {errors.departmentName && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {getErrorMessage(errors.departmentName)}
+                  </p>
+                )}
+              </div>
               <div className="mb-4 w-68 lg:w-72 xl:w-96">
                 <label className="block mb-1">Tenth Percentage</label>
                 <input
@@ -300,6 +400,19 @@ const ApplicationForm = () => {
                 {errors.tenthPercentage && (
                   <p className="text-red-500 text-sm mt-1">
                     {getErrorMessage(errors.tenthPercentage)}
+                  </p>
+                )}
+              </div>
+              <div className="mb-4 w-68 lg:w-72 xl:w-96">
+                <label className="block mb-1">hscBoard</label>
+                <input
+                  {...register("hscBoard")}
+                  placeholder="Enter HSC Board,"
+                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#56B280]"
+                />
+                {errors.hscBoard && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {getErrorMessage(errors.hscBoard)}
                   </p>
                 )}
               </div>
@@ -323,13 +436,27 @@ const ApplicationForm = () => {
                   placeholder="Enter CET Percentile"
                   className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#56B280]"
                 />
-                {errors.cetPercentile && (
+                {errors.jeePercentile && (
                   <p className="text-red-500 text-sm mt-1">
-                    {getErrorMessage(errors.cetPercentile)}
+                    {getErrorMessage(errors.jeePercentile)}
+                  </p>
+                )}
+              </div>
+              <div className="mb-4 w-68 lg:w-72 xl:w-96">
+                <label className="block mb-1">JEE Percentile</label>
+                <input
+                  {...register("jeePercentile")}
+                  placeholder="Enter JEE Percentile"
+                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#56B280]"
+                />
+                {errors.jeePercentile && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {getErrorMessage(errors.jeePercentile)}
                   </p>
                 )}
               </div>
             </div>
+            
             <div className="flex flex-wrap gap-4 justify-between">
               <div className="mb-4 w-68 lg:w-72 xl:w-96">
                 <label className="block mb-1">Admission Year</label>
@@ -371,6 +498,113 @@ const ApplicationForm = () => {
                 )}
               </div>
             </div>
+            {/* SGPI, Live KT, Dead KT for Semesters 1 to 8 */}
+            {[...Array(8)].map((_, i) => (
+              <div key={i}>
+                <div className="mb-4 w-68 lg:w-72 xl:w-96">
+                  <label className="block mb-1">SGPI Sem {i + 1}</label>
+                  <input
+                    {...register(`sem${i + 1}Sgpi`)}
+                    placeholder={`Enter SGPI for Sem ${i + 1}`}
+                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#56B280]"
+                  />
+                  {errors[`sem${i + 1}Sgpi`] && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {getErrorMessage(errors[`sem${i + 1}Sgpi`])}
+                    </p>
+                  )}
+                </div>
+
+                <div className="mb-4 w-68 lg:w-72 xl:w-96">
+                  <label className="block mb-1">Live KT Sem {i + 1}</label>
+                  <input
+                    {...register(`sem${i + 1}LiveKt`)}
+                    placeholder={`Enter Live KT for Sem ${i + 1}`}
+                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#56B280]"
+                  />
+                  {errors[`sem${i + 1}LiveKt`] && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {getErrorMessage(errors[`sem${i + 1}LiveKt`])}
+                    </p>
+                  )}
+                </div>
+
+                <div className="mb-4 w-68 lg:w-72 xl:w-96">
+                  <label className="block mb-1">Dead KT Sem {i + 1}</label>
+                  <input
+                    {...register(`sem${i + 1}DeadKt`)}
+                    placeholder={`Enter Dead KT for Sem ${i + 1}`}
+                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#56B280]"
+                  />
+                  {errors[`sem${i + 1}DeadKt`] && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {getErrorMessage(errors[`sem${i + 1}DeadKt`])}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {/* SSC Board */}
+            <div className="mb-4 w-68 lg:w-72 xl:w-96">
+              <label className="block mb-1">SSC Board</label>
+              <input
+                {...register("sscBoard")}
+                placeholder="Enter SSC Board"
+                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#56B280]"
+              />
+              {errors.sscBoard && (
+                <p className="text-red-500 text-sm mt-1">
+                  {getErrorMessage(errors.sscBoard)}
+                </p>
+              )}
+            </div>
+
+            {/* Diploma */}
+            <div className="mb-4 w-68 lg:w-72 xl:w-96">
+              <label className="block mb-1">Diploma</label>
+              <input
+                {...register("diploma")}
+                placeholder="Enter Diploma"
+                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#56B280]"
+              />
+              {errors.diploma && (
+                <p className="text-red-500 text-sm mt-1">
+                  {getErrorMessage(errors.diploma)}
+                </p>
+              )}
+            </div>
+
+            {/* Diploma Board */}
+            <div className="mb-4 w-68 lg:w-72 xl:w-96">
+              <label className="block mb-1">Diploma Board</label>
+              <input
+                {...register("diplomaBoard")}
+                placeholder="Enter Diploma Board"
+                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#56B280]"
+              />
+              {errors.diplomaBoard && (
+                <p className="text-red-500 text-sm mt-1">
+                  {getErrorMessage(errors.diplomaBoard)}
+                </p>
+              )}
+            </div>
+
+            {/* Diploma Stream */}
+            <div className="mb-4 w-68 lg:w-72 xl:w-96">
+              <label className="block mb-1">Diploma Stream</label>
+              <input
+                {...register("diplomaStream")}
+                placeholder="Enter Diploma Stream"
+                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#56B280]"
+              />
+              {errors.diplomaStream && (
+                <p className="text-red-500 text-sm mt-1">
+                  {getErrorMessage(errors.diplomaStream)}
+                </p>
+              )}
+            </div>
+
             <div className="flex flex-wrap gap-4 justify-between">
               <div className="mb-4 w-68 lg:w-72 xl:w-96">
                 <label className="block mb-1">Aggregate CGPI</label>
@@ -414,6 +648,77 @@ const ApplicationForm = () => {
             </div>
           </div>
         )}
+        {step === 3 && (
+          <div>
+            <h1>Upload Documents</h1>
+            <div className="flex flex-wrap gap-4 justify-between">
+            {/* <!-- 1st Column: Select Document Dropdown and Browse Button --> */}
+            <div className="mb-4 w-full lg:w-1/2 xl:w-1/2">
+              <label className="block mb-1">Select Document</label>
+              <select
+                {...register("selectedDocument")}
+                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#56B280]"
+              >
+                <option value="stud_resume">Resume</option>
+                <option value="stud_sem1">Semester 1</option>
+                <option value="stud_sem2">Semester 2</option>
+                <option value="stud_sem3">Semester 3</option>
+                <option value="stud_sem4">Semester 4</option>
+                <option value="stud_sem5">Semester 5</option>
+                <option value="stud_sem6">Semester 6</option>
+                <option value="stud_sem7">Semester 7</option>
+                <option value="stud_sem8">Semester 8</option>
+                <option value="stud_cet">CET</option>
+                <option value="stud_jee">JEE</option>
+                <option value="stud_hsc">HSC</option>
+                <option value="stud_ssc">SSC</option>
+                <option value="stud_diploma">Diploma</option>
+                <option value="stud_capAllotment">CAP Allotment</option>
+                <option value="stud_photoWithSignature">Photo with Signature</option>
+                <option value="stud_gapCertificate">Gap Certificate</option>
+                <option value="stud_aadhar">Aadhar</option>
+                <option value="stud_pan">PAN</option>
+                <option value="handcap_cert">Handicap Certificate</option>
+              </select>
+              <button
+                type="button"
+                className="mt-4 p-2 bg-[#56B280] text-white rounded hover:bg-green-600"
+                onClick={() => {
+                  const fileInput = document.getElementById('fileInput') as HTMLInputElement | null;
+                  if (fileInput) {
+                    fileInput.click();
+                    
+                  }
+                }}
+              >
+                Browse
+              </button>
+
+              <input
+                type="file"
+                id="fileInput"
+                style={{ display: 'none' }}
+                {...register("fileUpload")}
+              />
+            </div>
+
+            {/* <!-- 2nd Column: List of Uploaded Documents --> */}
+            {/* <div className="mb-4 w-full lg:w-1/2 xl:w-1/2"> */}
+              {/* <label className="block mb-1">Uploaded Documents</label>
+              <ul className="list-disc pl-5">
+                {uploadedDocuments.map((doc, index) => (
+                    <li key={index} className="mb-2">
+                    {doc}
+                    </li>
+                ))}
+                </ul>
+            </div> */}
+          </div>
+
+          </div>
+        )}
+
+
 
         <div className="flex justify-between mt-4">
           {step > 0 && (
@@ -425,7 +730,7 @@ const ApplicationForm = () => {
               Previous
             </button>
           )}
-          {step < 2 ? (
+          {step < 3 ? (
             <button
               type="button"
               onClick={nextStep}
