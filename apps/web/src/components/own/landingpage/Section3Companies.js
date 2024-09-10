@@ -1,43 +1,26 @@
 import React from 'react';
+import CompanyCard from './CompanyCard'; // Import the company card template
 import styles from '../../../app/student/styles_a/Home.module.css';
+
+const companies = [
+  { name: 'Morgan Stanley', logoSrc: '/images/section3/morganstanley.png'},
+  { name: 'J.P. Morgan & Chase', logoSrc: '/images/section3/jpmc.jpg' },
+  { name: 'Nomura', logoSrc: '/images/section3/nomura.png' },
+  { name: 'General Mills', logoSrc: '/images/section3/generalmills.png' },
+  { name: 'Accenture', logoSrc: '/images/section3/accenture.jpg' },
+  { name: 'Capgemini', logoSrc: '/images/section3/capgemini.jpg' },
+  { name: 'L&T Info', logoSrc: '/images/section3/lnt.jpg' },
+  { name: 'MAQ Software', logoSrc: '/images/section3/maqsoftware.png' }
+];
 
 const Section3Companies = () => {
   return (
     <section id="companies" className={styles.sectionCompanies}>
       <h2>Companies Visiting Us</h2>
       <div className={styles.companiesGrid}>
-        <div className={styles.companyCard}>
-          <img src="../../" alt="Morgan Stanley" className={styles.companyLogo} />
-          <p>Morgan Stanley</p>
-        </div>
-        <div className={styles.companyCard}>
-          <img src="/images/jpmorgan.png" alt="J.P. Morgan & Chase" className={styles.companyLogo} />
-          <p>J.P. Morgan & Chase</p>
-        </div>
-        <div className={styles.companyCard}>
-          <img src="/images/nomura.png" alt="Nomura" className={styles.companyLogo} />
-          <p>Nomura</p>
-        </div>
-        <div className={styles.companyCard}>
-          <img src="/images/generalmills.png" alt="General Mills" className={styles.companyLogo} />
-          <p>General Mills</p>
-        </div>
-        <div className={styles.companyCard}>
-          <img src="/images/accenture.png" alt="Accenture" className={styles.companyLogo} />
-          <p>Accenture</p>
-        </div>
-        <div className={styles.companyCard}>
-          <img src="/images/capgemini.png" alt="Capgemini" className={styles.companyLogo} />
-          <p>Capgemini</p>
-        </div>
-        <div className={styles.companyCard}>
-          <img src="/images/ltinfo.png" alt="L&T Info" className={styles.companyLogo} />
-          <p>L&T Info</p>
-        </div>
-        <div className={styles.companyCard}>
-          <img src="/images/maqsoftware.png" alt="MAQ Software" className={styles.companyLogo} />
-          <p>MAQ Software</p>
-        </div>
+        {companies.map((company, index) => (
+          <CompanyCard key={index} logoSrc={company.logoSrc} name={company.name} />
+        ))}
       </div>
     </section>
   );

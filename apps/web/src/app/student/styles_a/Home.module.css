@@ -43,7 +43,7 @@
 
   .sectionIntro {
     position: relative;
-    background-image: url('../../../components/images/sec_1.jpg'); /* Replace with the correct image path */
+    background-image: url('../../../../public/images/sec_1.jpg'); /* Replace with the correct image path */
     background-size: cover;
     background-position: center;
     height: 100vh; /* Full viewport height */
@@ -115,12 +115,19 @@
   padding: 50px 20px;
   text-align: center;
   color: white;
-  background-image: url('../../../components/images/sec2.jpg'); /* Replace with the path to your image */
+  background-image: url('/apps/web/public/images/sec2.jpg'); /* Replace with the path to your image */
   background-size: cover;
   background-position: center;
   background-attachment: fixed; /* Optional: parallax effect */
   z-index: 1;
+  font-size: 20px;
 }
+.sectionResults::first-line{
+  font-size: 40px;
+
+}
+
+
 
 .sectionResults::before {
   content: "";
@@ -179,6 +186,9 @@
 .sectionCompanies {
   padding: 50px 20px;
   text-align: center;
+  font-size: 40px;
+  font-style:normal;
+  
 }
 
 .companiesGrid {
@@ -232,6 +242,10 @@
 /* card review */
 
 .reviewCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   background-color: #fff;
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
@@ -242,13 +256,14 @@
   transition: transform 0.3s ease;
 }
 
+
 .reviewCard:hover {
   transform: translateY(-10px);
 }
 
 .reviewPhoto {
-  width: 80px;
-  height: 80px;
+  width: 160px;
+  height: 160px;
   border-radius: 50%;
   object-fit: cover;
   margin-bottom: 15px;
@@ -270,8 +285,11 @@
 .sectionReviews {
   padding: 50px 20px;
   text-align: center;
+  
 }
-
+.sectionReviewsmaintext{
+  font-size: 40px;
+}
 .reviewsGrid {
   display: flex;
   flex-wrap: wrap;

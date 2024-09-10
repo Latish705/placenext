@@ -4,17 +4,17 @@ import styles from '../../../app/student/styles_a/Home.module.css';
 
 const reviews = [
   {
-    photo: '/images/assets2.png',
+    photo: '/images/SectionReview/assets2.png',
     name: 'John Doe',
     message: 'PlaceNext helped me land my dream job. The platform is amazing!'
   },
   {
-    photo: '/images/user2.jpg',
+    photo: '/images/SectionReview/assets2.png',
     name: 'Jane Smith',
     message: 'A seamless experience for placement. Highly recommended for students.'
   },
   {
-    photo: '/images/user3.jpg',
+    photo: '/images/SectionReview/assets2.png',
     name: 'Mike Johnson',
     message: 'PlaceNext streamlined the whole placement process for me!'
   }
@@ -23,7 +23,7 @@ const reviews = [
 const SectionReviews = () => {
   return (
     <section id="reviews" className={styles.sectionReviews}>
-      <h2>Student Reviews</h2>
+      <h2 className={styles.sectionReviewsmaintext}>Student Reviews</h2>
       <div className={styles.reviewsGrid}>
         {reviews.map((review, index) => (
           <ReviewCard
