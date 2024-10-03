@@ -60,7 +60,7 @@ const SignUpFormCollege = () => {
 
         if (signCheckResponse.data.success === true) {
           if (signCheckResponse.data.isFirstSignIn) {
-            router.push("/college/applicationform");
+            router.push("/college/applicationForm");
           }
         }
 

@@ -2,9 +2,37 @@
 
 import axios from "axios";
 import { BackendUrl } from "@/utils/constants";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
 
 const ApplicationForm = () => {
+  const [colleges, setColleges] = useState([]);
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+    }
+    const fetchColleges = async () => {
+      try {
+        const response = await axios.get(`${BackendUrl}/api/student/colleges`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        console.log(response.data);
+        if (response.data.success) {
+          setColleges(response.data.colleges);
+        }
+      } catch (error: any) {
+        console.error("Error fetching colleges", error.message);
+      }
+    };
+    fetchColleges();
+  }, []);
+
   const [formData, setFormData] = useState({
     firstName: "",
     middleName: "",
@@ -41,6 +69,7 @@ const ApplicationForm = () => {
     sem6CGPI: "",
     sem7CGPI: "",
     sem8CGPI: "",
+    college: "",
   });
 
   const [documents, setDocuments] = useState({
@@ -74,8 +103,6 @@ const ApplicationForm = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    // Add validation logic here
-    // Example: if (!formData.firstName) newErrors.firstName = "First name is required.";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -112,7 +139,10 @@ const ApplicationForm = () => {
             },
           }
         );
-        console.log(response.data);
+        if (response.data.success) {
+          toast.success(response.data.message);
+          router.push("/student/dashboard");
+        }
       }
     } catch (error: any) {
       console.error("Signup error:", error.message);
@@ -216,6 +246,23 @@ const ApplicationForm = () => {
             <div>
               <h1 className="text-2xl font-bold mb-6">Academic Details</h1>
               <div className="flex flex-wrap gap-4 justify-between">
+                <div>
+                  <label className="block mb-1">College</label>
+                  <select
+                    name="college"
+                    onChange={handleChange}
+                    value={formData.college}
+                    className="w-72 lg:w-72 xl:w-96 p-2 border border-blue-500 rounded shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  >
+                    <option value="">Select College</option>
+                    {colleges.map((college: any) => (
+                      <option key={college._id} value={college._id}>
+                        {college.name}
+                      </option>
+                    ))}
+                    <option>66edbf3b7298265cb469ca2d</option>
+                  </select>
+                </div>
                 {[
                   "courseType",
                   "admissionYear",

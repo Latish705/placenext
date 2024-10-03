@@ -13,6 +13,7 @@ export interface IJob extends Document {
   yr_of_exp_req: number;
   job_timing: string;
   status: string;
+  college: Object;
 }
 
 const JobSchema = new Schema<IJob>({
@@ -55,6 +56,10 @@ const JobSchema = new Schema<IJob>({
   status: {
     type: String,
     required: true,
+  },
+  college: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "College",
   },
 });
 

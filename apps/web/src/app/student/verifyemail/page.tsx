@@ -2,14 +2,14 @@
 import { useEffect, useState } from "react";
 import { signUpAndVerifyEmail, isUserVerified } from "@/config/firebase-config";
 import Link from "next/link";
-import { useRouter } from "next/navigation"; // Use useRouter for navigation
+import { useRouter } from "next/navigation";
 import axios from "axios";
 import { BackendUrl } from "@/utils/constants";
 
 export default function VerifyEmail() {
   const [attempts, setAttempts] = useState(0);
   const maxAttempts = 6;
-  const router = useRouter(); // Initialize router
+  const router = useRouter();
 
   const resendEmail = async () => {
     const email = localStorage.getItem("email");
@@ -33,7 +33,7 @@ export default function VerifyEmail() {
 
     if (email) {
       try {
-        const isVerified = await isUserVerified(email);
+        const isVerified = await isUserVerified();
 
         const userCheck = await axios.get(
           `${BackendUrl}/api/student/is_first_signin`,
@@ -45,12 +45,12 @@ export default function VerifyEmail() {
         );
 
         if (userCheck.data.success && userCheck.data.isFirstSignIn) {
-          router.push("/student/applicationform"); // Use router.push for navigation
+          router.push("/student/applicationform");
           return;
         }
 
         if (isVerified) {
-          router.push("/student/dashboard"); // Use router.push for navigation
+          router.push("/student/dashboard");
         }
       } catch (error) {
         console.error("Error checking verification status:", error);
@@ -63,7 +63,7 @@ export default function VerifyEmail() {
   useEffect(() => {
     if (attempts >= maxAttempts) {
       alert("Verification email not received. Please try again.");
-      router.push("/student/login"); // Use router.push for navigation
+      router.push("/student/login");
       return;
     }
 
@@ -73,7 +73,7 @@ export default function VerifyEmail() {
     }, 3000);
 
     return () => clearInterval(intervalId);
-  }, [attempts]);
+  }, [attempts, checkVerification, router]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">

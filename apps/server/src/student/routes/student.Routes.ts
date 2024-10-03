@@ -1,6 +1,11 @@
 import { Router } from "express";
 import { authenticateToken } from "../../middlewares/verifyGoogleToken";
-import { applicationFrom, isFirstSignIn, signup } from "../controller/auth";
+import {
+  applicationFrom,
+  getAllCollegeList,
+  isFirstSignIn,
+  signup,
+} from "../controller/auth";
 import { upload } from "../../middlewares/multer";
 
 const studentRoutes = Router();
@@ -35,5 +40,8 @@ studentRoutes.post(
 );
 
 studentRoutes.get("/is_first_signin", authenticateToken, isFirstSignIn);
+
+// student access to college
+studentRoutes.get("/colleges", authenticateToken, getAllCollegeList);
 
 export default studentRoutes;

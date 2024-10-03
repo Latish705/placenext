@@ -9,8 +9,11 @@ import axios from "axios";
 import { BackendUrl } from "@/utils/constants";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
-import { signInWithGoogle } from "@/config/firebase-config";
-import firebase from "firebase/compat/app";
+import firebase, {
+  signInWithGoogle,
+  signUpAndVerifyEmail,
+} from "@/config/firebase-config";
+
 import { useEffect, useState } from "react";
 import { IoLogoApple } from "react-icons/io5";
 import { FcGoogle } from "react-icons/fc";
@@ -30,28 +33,44 @@ const SignUpFormCompany = () => {
 
   const handleLoginWithGoogle = async () => {
     try {
-      const token: any = await signInWithGoogle();
-      console.log(token);
-      const isNewUser = token.additionalUserInfo?.isNewUser;
-      if (isNewUser) {
-        console.log(token.additionalUserInfo);
+      const { token, refreshToken } = await signInWithGoogle();
+      localStorage.setItem("token", token);
+      localStorage.setItem("refreshToken", refreshToken);
+
+      const signCheckResponse = await axios.get(
+        `${BackendUrl}/api/company/is_first_signin`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (token) {
+        console.log("ID Token:", token);
+        const response = await axios.post(
+          `${BackendUrl}/api/company/google_login`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (signCheckResponse.data.success === true) {
+          if (signCheckResponse.data.isFirstSignIn) {
+            router.push("/company/applicationForm");
+          }
+        }
+
+        if (response.data.success === true) {
+          console.log("User logged in successfully");
+          router.push("/company/dashboard");
+        }
       }
     } catch (error) {
       console.error("Error during login:", error);
-    }
-  };
-
-  const handleAppleLogin = () => {
-    // Add Apple OAuth login logic here
-    console.log("Apple login clicked");
-  };
-
-  const handleLogout = async () => {
-    try {
-      await firebase.auth().signOut();
-      console.log("User signed out");
-    } catch (error) {
-      console.error("Error during logout:", error);
     }
   };
 
@@ -65,11 +84,13 @@ const SignUpFormCompany = () => {
 
   const onSubmit = async (data: any) => {
     try {
-      const res = await axios.post(`${BackendUrl}/api/customers/signup`, data);
-      // @ts-ignore
+      const res = await axios.post(
+        `${BackendUrl}/api/company/is_first_signin_with_email`,
+        data
+      );
 
       // @ts-ignore
-      if (res.data.success) navigator("/email-sent");
+      if (res.data.success) navigator("/company/verifyemail");
     } catch (error: any) {
       console.error("Signup error:", error.message);
     }
@@ -84,7 +105,7 @@ const SignUpFormCompany = () => {
 
   return (
     <div className="max-w-md mx-auto mt-12 p-2 rounded-lg bg-transparent md:p-5 flex flex-col gap-4">
-      <h2 className="text-2xl font-bold mb-6">Login</h2>
+      <h2 className="text-2xl font-bold mb-6">Faculty Signup</h2>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="mb-4 min-w-40 md:min-w-60 lg:min-w-80">
           <input
@@ -127,19 +148,17 @@ const SignUpFormCompany = () => {
           <FcGoogle size={20} />
           Login with Google
         </button>
-        <button
-          onClick={handleAppleLogin}
-          className="w-full bg-[#000000] text-white p-2 rounded hover:bg-gray-800 mt-2 flex items-center justify-center gap-2"
-        >
-          <IoLogoApple size={20} />
-          Login with Apple
-        </button>
       </div>
+
       <p>
         Don&apos;t have an Account?
         <Link className="text-[#56B280] px-2" href="/signup">
           Sign Up
         </Link>
+      </p>
+      <p className="text-[12px]">
+        <span className="text-red-500 font-bold">Note:</span> that the email you
+        are using to register Company will be the admin email.
       </p>
     </div>
   );

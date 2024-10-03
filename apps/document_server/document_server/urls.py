@@ -17,10 +17,10 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
-from .views import test,upload_pdf
+from .views import test,verify_user
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("test/",test),
-     path('upload_pdf', upload_pdf, name='upload_pdf'),
+     path('verify_user',verify_user , name='verify_user'),
 ]

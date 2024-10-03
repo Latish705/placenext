@@ -1,8 +1,6 @@
 import MainDashboard from "@/components/own/Dashboard/MainDashboard";
 import FacultySidebar from "@/components/own/FacultySidebar";
 import MainNav from "@/components/own/Nav/MainNav";
-
-import StudentSidebar from "@/components/own/StudentSidebar";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 
@@ -19,20 +17,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <div className="flex flex-row w-full h-full">
-          <div>
-            {/* this will contain sidebar */}
-            <FacultySidebar />
-          </div>
-          <div className="w-full h-full flex flex-col bg-primary_background">
-            {/* this will contain navbar and main content */}
-            <MainNav />
-            <div className="mt-20">{children}</div>
-          </div>
+    <div className="flex flex-row w-full h-full">
+      {/* <div>this will contain sidebar</div> */}
+      <div className="w-full h-full flex flex-col bg-primary_background">
+        {/* this will contain navbar and main content */}
+        <div className="fixed z-50 py-2 flex items-center justify-between">
+          <FacultySidebar />
+          <MainNav />
         </div>
-      </body>
-    </html>
+        <div className="mt-20 mx-4">{children}</div>
+      </div>
+    </div>
   );
 }

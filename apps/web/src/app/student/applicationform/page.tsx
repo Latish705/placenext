@@ -1,5 +1,3 @@
-
-// import SignUpForm from "@/components/own/Form/SignUpForm";
 import Vector from "../assets/MobileLogin.svg";
 import ApplicationForm from "@/components/own/Form/ApplicationFrom";
 // import MessageList from  "@/components/own/Dashboard/MessageList"

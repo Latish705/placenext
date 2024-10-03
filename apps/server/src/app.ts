@@ -6,6 +6,9 @@ import dotenv from "dotenv";
 dotenv.config();
 const app = express();
 
+export const Document_server_url: string =
+  process.env.DOCUMENT_SERVER_URL || "";
+
 app.use(
   cors({
     origin: process.env.CLIENT_URL,

@@ -13,6 +13,7 @@ export interface ICollege extends Document {
   coll_departments: string[];
   coll_no_of_stud: number;
   coll_courses_offered: string[];
+  googleId: string;
 }
 
 const CollegeSchema = new Schema<ICollege>({
@@ -53,6 +54,10 @@ const CollegeSchema = new Schema<ICollege>({
   },
   coll_courses_offered: {
     type: [String],
+    required: true,
+  },
+  googleId: {
+    type: String,
     required: true,
   },
 });
