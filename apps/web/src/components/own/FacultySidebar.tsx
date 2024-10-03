@@ -38,10 +38,17 @@ const drawerVariants = {
 const options: Option[] = [
   { name: "Dashboard", path: "/college/dashboard" },
   { name: "Manage Students", path: "/college/student_list" },
+<<<<<<< Updated upstream
   { name: "Job Postings", path: "/messages" },
   { name: "Messages", path: "/doctors" },
   { name: "Profile", path: "/profile" },
   { name: "Settings", path: "/settings" },
+=======
+  { name: "Job Postings", path: "/college/createjob" },
+  { name: "Messages", path: "/messagess/inbox" },
+  { name: "Profile", path: "/college/profile" },
+  { name: "Settings", path: "/college/settings" },
+>>>>>>> Stashed changes
 ];
 
 // const dashSidebarOptions =
