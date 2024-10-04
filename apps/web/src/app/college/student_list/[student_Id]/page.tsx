@@ -122,12 +122,12 @@ export default function StudentById() {
   }
 
   return (
-    <div className="container mx-auto py-2 px-2 md:px-8">
-      <h1 className="text-3xl font-bold text-center mb-8">Student Profile</h1>
+    <div className="container mx-auto py-2 px-2 md:px-8 bg-[#E0FFFF]"> {/* Primary background color */}
+      <h1 className="text-3xl font-bold text-center mb-8 ">Student Profile</h1>
 
-      <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-        <h2 className="text-2xl font-semibold mb-4">Basic Information</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className=" bg-white text-primary shadow-md rounded-lg p-6 mb-6"> {/* Basic Information background */}
+        <h2 className="text-2xl font-semibold mb-4 text-primary">Basic Information</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-primary">
           <p>
             <strong>Name:</strong> {student.stud_name || "N/A"}
           </p>
@@ -159,10 +159,8 @@ export default function StudentById() {
       </div>
 
       {/* Highlighted Verification Section */}
-      <div className="bg-yellow-100 shadow-md rounded-lg p-6 mb-6">
-        <h2 className="text-2xl font-semibold mb-4 text-center">
-          Verification Status
-        </h2>
+      <div className="bg-third_back shadow-md rounded-lg p-6 mb-6">
+        <h2 className="text-2xl font-semibold mb-4 text-center">Verification Status</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <p className="flex items-center">
             <strong>System Verified:</strong>{" "}

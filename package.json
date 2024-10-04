@@ -21,6 +21,7 @@
     "packages/*"
   ],
   "dependencies": {
+    "chartjs-plugin-datalabels": "^2.2.0",
     "dotenv": "^16.4.5"
   }
 }

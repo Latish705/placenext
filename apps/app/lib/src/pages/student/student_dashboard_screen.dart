@@ -1,5 +1,6 @@
-import 'package:app/src/components/Dashboard/student/overview_component.dart';
 import 'package:flutter/material.dart';
+import 'package:app/src/components/Dashboard/student/overview_component.dart';
+import 'package:app/src/components/Dashboard/student/student_sidebar.dart'; // Import the Sidebar component
 
 class StudentDashboardScreen extends StatefulWidget {
   const StudentDashboardScreen({super.key});
@@ -31,7 +32,17 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Student Dashboard"),
+        // Add a menu button to open the sidebar
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () {
+              Scaffold.of(context).openDrawer(); // Open the sidebar drawer
+            },
+          ),
+        ),
       ),
+      drawer: Sidebar(), // Removed 'const' from here
       // Show the content based on the selected index
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(

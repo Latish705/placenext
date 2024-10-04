@@ -21,13 +21,6 @@ class LoginPageImage extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 20), // Add space between the image and text
-        const Text(
-          "Welcome to PlaceNext",
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
       ],
     );
   }

@@ -103,7 +103,7 @@ const LoginForm = () => {
 
   return (
     <div className="max-w-md mx-auto mt-12 p-2 rounded-lg bg-transparent md:p-5 flex flex-col gap-4">
-      <h2 className="text-2xl font-bold mb-6">Login</h2>
+      <h2 className="text-2xl font-bold mb-6">Student Login</h2>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="mb-4 min-w-40 md:min-w-60 lg:min-w-80">
           <input
