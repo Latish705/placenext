@@ -1,3 +1,5 @@
+import "package:app/src/pages/student/profile_page.dart";
+
 import "src/pages/student/student_login.dart";
 import "package:app/src/pages/college/college_dashboard.dart";
 import "package:app/src/pages/college/college_login.dart";
@@ -28,14 +30,14 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       theme: ThemeData(bottomNavigationBarTheme: NavigationThemeData.theme),
       debugShowCheckedModeBanner: false,
-      initialRoute: "/student_dashboard",
+      initialRoute: "/student_profile",
       routes: {
         "/": (context) => const OnBoardingScreen(),
         // student routes
         "/student_login": (context) => const LoginScreen(),
-        "/student_apply_job": (context) => const OnBoardingScreen(),
+
         "/student_dashboard": (context) => const StudentDashboardScreen(),
-        "/student_profile": (context) => const OnBoardingScreen(),
+        "/student_profile": (context) => ProfilePage(),
         "/student_application_form": (context) => const ApplicationForm(),
         // college routes
         "/college_login": (context) => const CollegeLoginScreen(),

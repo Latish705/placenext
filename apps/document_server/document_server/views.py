@@ -154,8 +154,7 @@ def perform_verification(user_id):
             print(f"Verification failed for user: {user_id}, failed semesters: {failed_semesters}")
             response_message = f'Verification failed for semesters: {failed_semesters}'
             
-            # Send notification for verification failure
-            send_notification(user_data['email'], response_message)  # Assume user_data contains email
+            send_notification(user_data['stud_email'], response_message)  
 
         return Response({'message': response_message})
     finally:

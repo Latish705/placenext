@@ -9,12 +9,10 @@ export const isFirstSignIn = async (req: Request, res: Response) => {
     // @ts-ignore
     const user = req.user;
 
-    // Try finding the student by Google ID or email
     const student = await College.findOne({
       $or: [{ googleId: user.uid }, { email: user.email }],
     });
 
-    // Return success and the isFirstSignIn status
     return res.status(200).json({ success: true, isFirstSignIn: !student });
   } catch (error: any) {
     console.log("Error in isFirstSignIn", error.message);
@@ -51,7 +49,6 @@ export const applicationFrom = async (req: Request, res: Response) => {
     // @ts-ignore
     const user = req.user;
 
-    // Check if user already exists
     const existingUser = await College.findOne({ email: user.email });
 
     if (existingUser) {
@@ -60,7 +57,6 @@ export const applicationFrom = async (req: Request, res: Response) => {
         .json({ success: false, msg: "User already exists" });
     }
 
-    // Create a new college
     const college = new College({
       googleId: user.uid,
       email: user.email,
@@ -76,26 +72,14 @@ export const applicationFrom = async (req: Request, res: Response) => {
       coll_departments: collegeDepartment,
     });
 
-    // Save the college
     await college.save();
 
-    // Return success
     return res.status(200).json({ success: true, college });
   } catch (error: any) {
     console.log("Error in applicationForm", error.message);
     return res.status(500).json({ msg: "Internal Server Error" });
   }
 };
-
-// export const getAllColeges = async (req: Request, res: Response) => {
-//   try {
-//     const colleges = await College.find();
-//     return res.status(200).json({ success: true, colleges });
-//   } catch (error: any) {
-//     console.log("Error in getAllColeges", error.message);
-//     return res.status(500).json({ msg: "Internal Server Error" });
-//   }
-// };
 
 export const getAllStudentList = async (req: Request, res: Response) => {
   try {
@@ -111,7 +95,6 @@ export const getAllStudentList = async (req: Request, res: Response) => {
 
     console.log("College ID:", college[0]._id.toString());
 
-    // Find all students associated with the college
     const students = await Student.find({
       stud_college_id: college[0]._id.toString(),
     });
@@ -119,13 +102,12 @@ export const getAllStudentList = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, msg: "No students found" });
     }
 
-    // Fetch placement statuses
     const placementStatus = await Promise.all(
       students.map(async (student) => {
         const studentInfo = await StudentInfo.findById(student.stud_info_id);
         console.log("Student Info:", studentInfo);
 
-        return studentInfo ? studentInfo.stud_placement_status : null; // Handle case where studentInfo is not found
+        return studentInfo ? studentInfo.stud_placement_status : null;
       })
     );
 

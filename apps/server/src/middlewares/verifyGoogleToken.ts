@@ -11,7 +11,7 @@ export const authenticateToken = async (
       req.headers.authorization?.split(" ")[1] ||
       req.body.refreshToken.toString();
 
-    console.log(token);
+    // console.log(token);
 
     if (!token) {
       return res.status(401).json({ error: "Access Denied" });

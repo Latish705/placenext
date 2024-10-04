@@ -3,6 +3,7 @@ import { authenticateToken } from "../../middlewares/verifyGoogleToken";
 import {
   applicationFrom,
   getAllCollegeList,
+  getUserDetails,
   isFirstSignIn,
   signup,
 } from "../controller/auth";
@@ -40,6 +41,7 @@ studentRoutes.post(
 );
 
 studentRoutes.get("/is_first_signin", authenticateToken, isFirstSignIn);
+studentRoutes.get("/get_user_details", authenticateToken, getUserDetails);
 
 // student access to college
 studentRoutes.get("/colleges", authenticateToken, getAllCollegeList);

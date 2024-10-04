@@ -1,151 +1,109 @@
+// Add this at the very top of the file to make it a Client Component
 "use client";
 
-import {
-  Box,
-  Drawer,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  IconButton,
-  useMediaQuery,
-  Button,
-} from "@mui/material";
-import { useState, useEffect } from "react";
-import ImportContactsTwoToneIcon from "@mui/icons-material/ImportContactsTwoTone";
-import { BiCategoryAlt } from "react-icons/bi";
-import { FaUserDoctor } from "react-icons/fa6";
-import { BiMessageSquareMinus } from "react-icons/bi";
-import { CiSettings } from "react-icons/ci";
-import { motion } from "framer-motion";
-import MenuIcon from "@mui/icons-material/Menu";
-import { useRouter } from "next/navigation";
-import HelpCard from "./HelpCard";
-import LogoText from "./LogoText";
-import { getAuth, signOut } from "firebase/auth";
-import { logout } from "@/config/firebase-config";
+import React, { useState } from 'react';
 
-interface Option {
-  name: string;
-  path: string;
-}
-
-const drawerVariants = {
-  hidden: { x: "-100%" },
-  visible: { x: 0 },
+// Define types for the settings
+type Settings = {
+    theme: 'light' | 'dark';
+    fontSize: 'small' | 'medium' | 'large';
+    notifications: boolean;
 };
 
-const options: Option[] = [
-  { name: "Dashboard", path: "/student/dashboard" },
-  { name: "Apply for Jobs", path: "/student/applyjob" },
-  { name: "Messages", path: "/messages/inbox" },
-  { name: "Profile", path: "/student/profile" },
-  { name: "Settings", path: "/settings" },
-];
+const SettingsPage: React.FC = () => {
+    const [settings, setSettings] = useState<Settings>({
+        theme: 'light',
+        fontSize: 'medium',
+        notifications: true,
+    });
 
-const OptionsIcon = [
-  <ImportContactsTwoToneIcon key="import-contacts" />,
-  <BiCategoryAlt key="category-alt" />,
-  <FaUserDoctor key="user-doctor" />,
-  <BiMessageSquareMinus key="message-square-minus" />,
-  <CiSettings key="settings" />,
-];
+    const handleThemeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        setSettings({ ...settings, theme: event.target.value as 'light' | 'dark' });
+    };
 
-export default function StudentSidebar({ isIcon }: any) {
-  const router = useRouter();
-  const isLargeScreen = useMediaQuery("(min-width: 1024px)");
-  const [open, setOpen] = useState(isLargeScreen);
+    const handleFontSizeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        setSettings({ ...settings, fontSize: event.target.value as 'small' | 'medium' | 'large' });
+    };
 
-  useEffect(() => {
-    if (isLargeScreen) {
-      setOpen(true);
-    } else {
-      setOpen(false);
-    }
-  }, [isLargeScreen]);
+    const handleNotificationChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setSettings({ ...settings, notifications: event.target.checked });
+    };
 
-  const toggleDrawer = (newOpen: boolean) => () => {
-    setOpen(newOpen);
-  };
+    return (
+        <div className={`settings-page ${settings.theme}`}>
+            <h1>Settings</h1>
 
-  const handleLogout = async () => {
-    const auth = getAuth();
-    try {
-      logout();
-      console.log("User signed out");
-      router.push("/authentication/studentLogin");
-    } catch (error) {
-      console.error("Error during logout:", error);
-    }
-  };
+            <div className="setting-item">
+                <label htmlFor="theme">Theme:</label>
+                <select id="theme" value={settings.theme} onChange={handleThemeChange}>
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                </select>
+            </div>
 
-  const DrawerList = (
-    <Box
-      sx={{ width: isLargeScreen ? 210 : 240 }}
-      role="presentation"
-      className="h-full flex flex-col"
-    >
-      <LogoText />
-      <div className="flex flex-col justify-between items-center h-full">
-        <div className="px-2">
-          <List>
-            {options.map((option, index) => (
-              <ListItem key={option.name} disablePadding>
-                <ListItemButton
-                  className="rounded-xl"
-                  onClick={() => router.push(option.path)}
-                >
-                  <ListItemIcon>{OptionsIcon[index]}</ListItemIcon>
-                  {!isIcon && <ListItemText primary={option.name} />}
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
+            <div className="setting-item">
+                <label htmlFor="fontSize">Font Size:</label>
+                <select id="fontSize" value={settings.fontSize} onChange={handleFontSizeChange}>
+                    <option value="small">Small</option>
+                    <option value="medium">Medium</option>
+                    <option value="large">Large</option>
+                </select>
+            </div>
+
+            <div className="setting-item">
+                <label>
+                    <input
+                        type="checkbox"
+                        checked={settings.notifications}
+                        onChange={handleNotificationChange}
+                    />
+                    Enable Notifications
+                </label>
+            </div>
+
+            <div className="setting-item">
+                <h2>Theme Preview:</h2>
+                <div className={`preview-box ${settings.theme}`} style={{ fontSize: settings.fontSize }}>
+                    This is a preview box for the {settings.theme} theme with {settings.fontSize} font size.
+                </div>
+            </div>
+
+            <div className="setting-item">
+                <button onClick={() => alert('Settings Saved!')}>Save Settings</button>
+            </div>
+
+            <style>
+                {`
+                    .settings-page {
+                        padding: 20px;
+                    }
+                    .settings-page.light {
+                        background-color: #ffffff;
+                        color: #000000;
+                    }
+                    .settings-page.dark {
+                        background-color: #333333;
+                        color: #ffffff;
+                    }
+                    .preview-box {
+                        border: 1px solid #ccc;
+                        padding: 20px;
+                        margin-top: 10px;
+                        transition: background-color 0.3s;
+                    }
+                    .preview-box.light {
+                        background-color: #f9f9f9;
+                    }
+                    .preview-box.dark {
+                        background-color: #444444;
+                    }
+                    .setting-item {
+                        margin-bottom: 15px;
+                    }
+                `}
+            </style>
         </div>
-        <div className="p-2 h-full flex items-center justify-center">
-          <HelpCard />
-        </div>
-        <Button onClick={handleLogout}>Logout</Button>
-      </div>
-    </Box>
-  );
+    );
+};
 
-  return (
-    <div className="flex overflow-hidden">
-      {!isLargeScreen && (
-        <IconButton onClick={toggleDrawer(!open)}>
-          <MenuIcon />
-        </IconButton>
-      )}
-      <Drawer
-        anchor="left"
-        open={open}
-        onClose={toggleDrawer(false)}
-        variant={isLargeScreen ? "persistent" : "temporary"}
-        sx={{
-          width: isLargeScreen ? 210 : 240,
-          flexShrink: 0,
-          [`& .MuiDrawer-paper`]: {
-            width: isLargeScreen ? 210 : 240,
-            boxSizing: "border-box",
-          },
-        }}
-      >
-        <motion.div
-          initial="hidden"
-          animate={open ? "visible" : "hidden"}
-          variants={drawerVariants}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          style={{
-            height: "100%",
-            width: isLargeScreen ? 210 : 240,
-            overflow: "hidden",
-          }}
-        >
-          {DrawerList}
-        </motion.div>
-      </Drawer>
-    </div>
-  );
-}
+export default SettingsPage;

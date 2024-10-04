@@ -234,3 +234,21 @@ export const getAllCollegeList = async (req: Request, res: Response) => {
       .json({ success: false, message: "Internal Server Error" });
   }
 };
+
+export const getUserDetails = async (req: Request, res: Response) => {
+  try {
+    // @ts-ignore
+    const user = req.user;
+    const student = await Student.findOne({ googleId: user.uid }).populate(
+      "stud_info_id"
+    );
+
+    if (!student) {
+      return res.status(404).json({ success: false, msg: "Student not found" });
+    }
+
+    return res.status(200).json({ success: true, student });
+  } catch (error: any) {
+    console.log("Error in getUserDetails", error.message);
+  }
+};
