@@ -23,6 +23,8 @@ dependencies:
   get_it:
   firebase_auth:
   firebase_core:
+  fl_chart: ^0.40.0
+  google_sign_in: ^5.4.0  
 
 dev_dependencies:
   flutter_test:
