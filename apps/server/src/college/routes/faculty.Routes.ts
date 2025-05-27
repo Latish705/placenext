@@ -7,7 +7,7 @@ import {
   selectCollege,
 } from "../controller/faculty.controller";
 import { authenticateToken } from "../../middlewares/verifyGoogleToken";
-import { getFacultyRole, verifyRole } from "../middleware/verifyRole";
+import { verifyRole } from "../middleware/verifyRole";
 import { manageJob } from "../controller/jobs.controller";
 
 const facultyRoutes = Router();
@@ -20,7 +20,7 @@ facultyRoutes.get("/managejobs", authenticateToken,verifyFaculty,verifyRole,mana
 facultyRoutes.get(
   "/get_faculty_list",
   authenticateToken,
-  getFacultyRole,
+  verifyRole,
   getFacultyList
 );
 
