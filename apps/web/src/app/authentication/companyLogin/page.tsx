@@ -2,7 +2,7 @@ import SignInFormCompany from "@/components/own/Form/CompanyLoginForm";
 
 // import Vector from "../assets/Authentication.svg";
 
-export default function Login() {
+export default function CompanyLogin() {
   return (
     <div className="flex flex-col mt-28 md:mt-0 md:flex-row w-full min-h-screen ">
       <div className="mt-4 md:w-1/2 flex items-center justify-center">

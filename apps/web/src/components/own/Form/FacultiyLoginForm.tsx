@@ -18,7 +18,7 @@ import { useEffect, useState } from "react";
 import { IoLogoApple } from "react-icons/io5";
 import { FcGoogle } from "react-icons/fc";
 
-const SignUpFormCollege = () => {
+const SignInFormCollege = () => {
   const router = useRouter();
   const [user, setUser] = useState(null);
 
@@ -157,7 +157,7 @@ const SignUpFormCollege = () => {
 
       <p>
         Don&apos;t have an Account?
-        <Link className="text-primary px-2" href="/signup">
+        <Link className="text-primary px-2" href="/authentication/facultySignup">
           Sign Up
         </Link>
       </p>
@@ -169,4 +169,4 @@ const SignUpFormCollege = () => {
   );
 };
 
-export default SignUpFormCollege;
+export default SignInFormCollege;

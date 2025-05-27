@@ -28,9 +28,10 @@ const SignUpFormStudent = () => {
     resolver: zodResolver(SignValidation),
   });
 
-  const getErrorMessage = (error: any) => {
-    return error?.message || "Invalid value";
-  };
+  const getErrorMessage = (error: any) => error?.message || "Invalid value";
+
+  const password = watch("password");
+  const confirmPassword = watch("confirm_password");
 
   useEffect(() => {
     const unsubscribe = firebase.auth().onAuthStateChanged((currentUser) => {
@@ -42,14 +43,22 @@ const SignUpFormStudent = () => {
   }, []);
 
   const onSubmit = async (data: any) => {
-    const { email, password } = data;
+    const { email, password, confirm_password } = data;
+
+    if (password !== confirm_password) {
+      alert("Passwords do not match.");
+      return;
+    }
+
     try {
+      // 1. Sign up and send email verification
       const token = await signUpAndVerifyEmail(email, password);
+
+      // 2. Store token/email in localStorage
       localStorage.setItem("token", token);
       localStorage.setItem("email", email);
-      localStorage.setItem("password", password);
 
-      // Call your backend signup API
+      // 3. Notify backend
       const response = await axios.post(
         `${BackendUrl}/api/student/signup_with_email`,
         { email }
@@ -60,12 +69,14 @@ const SignUpFormStudent = () => {
       }
     } catch (error: any) {
       console.error("Signup error:", error.message);
+      alert("Signup failed. Please try again.");
     }
   };
 
   const handleLoginWithGoogle = async () => {
     try {
       const { token, refreshToken } = await signInWithGoogle();
+
       localStorage.setItem("token", token);
       localStorage.setItem("refreshToken", refreshToken);
 
@@ -95,12 +106,14 @@ const SignUpFormStudent = () => {
       }
     } catch (error) {
       console.error("Google login error:", error);
+      alert("Google login failed. Please try again.");
     }
   };
 
   return (
     <div className="max-w-md mx-auto mt-12 p-2 rounded-lg bg-transparent md:p-5 flex flex-col gap-4">
       <h2 className="text-2xl font-bold mb-6">Student Signup</h2>
+
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="mb-4">
           <input
@@ -115,6 +128,7 @@ const SignUpFormStudent = () => {
             </p>
           )}
         </div>
+
         <div className="mb-4">
           <input
             type="password"
@@ -128,6 +142,7 @@ const SignUpFormStudent = () => {
             </p>
           )}
         </div>
+
         <div className="mb-4">
           <input
             type="password"
@@ -141,6 +156,7 @@ const SignUpFormStudent = () => {
             </p>
           )}
         </div>
+
         <button
           type="submit"
           className="w-full bg-primary text-white p-2 rounded hover:bg-blue-700"
@@ -161,7 +177,7 @@ const SignUpFormStudent = () => {
 
       <p className="mt-4">
         Already have an account?
-        <Link className="text-primary px-2" href="/signin">
+        <Link className="text-primary px-2" href="/authentication/studentLogin">
           Sign In
         </Link>
       </p>

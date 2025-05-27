@@ -5,7 +5,7 @@ import Image from "next/image";
 import useThemeStore from "@/store/store";
 import LogoText from "@/components/own/LogoText";
 
-export default function Login() {
+export default function StudentLogin() {
   const { darkMode, toggleDarkMode }: any = useThemeStore();
   return (
     <div className="flex flex-col md:mt-0 md:flex-row w-full h-full fixed">

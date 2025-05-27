@@ -8,6 +8,7 @@ import * as XLSX from "xlsx";
 import Faculty from "../models/faculty";
 import Department from "../models/department";
 import { redis } from "../..";
+import CollegeJobLink from "../../company/models/collegeJobLink";
 
 export const isFirstSignIn = async (req: Request, res: Response) => {
   try {
@@ -685,34 +686,74 @@ export const collegeAuth = async (req: Request, res: Response) => {
   }
 };
 
-export const getCollegeJob = async (req: Request, res: Response) => {
+export const getCollegePendingJobs=async(req:Request,res:Response)=>{
   try {
     // @ts-ignore
-    const user = req.user;
-    const faculty = await Faculty.findOne({ googleId: user.uid });
-    if (!faculty) {
-      return res.status(404).json({ success: false, msg: "College not found" });
-    }
-    const redisKey = `jobs:college:${faculty.faculty_college_id}`;
-    const cachedJobs = await redis.get(redisKey);
+    const user =req.user;
+    const faculty=await Faculty.findOne({googleId:user.uid});
 
-    if (cachedJobs) {
-      return res.status(200).json({ success: true, jobs: cachedJobs });
+    if(!faculty){
+      return res.status(404).json({success:false,msg:"college not found"})
     }
 
-    const jobs = await Job.find({ college: faculty.faculty_college_id });
-    if (!jobs.length) {
-      return res.status(404).json({ success: false, msg: "No jobs found" });
+    const jobs=await CollegeJobLink.find({ college: faculty.faculty_college_id ,status:"pending"});
+    if(!jobs.length){
+      return res.status(404).json({success:false,msg:"no jobs found"})
     }
+    return res.status(200).json({success:true,data:jobs,message:"pending jobs found successfully!"})
 
-    await redis.set(redisKey, jobs, { EX: 120 });
-    await redis.expire(redisKey, 120);
-    return res.status(200).json({ success: true, jobs });
-  } catch (error: any) {
-    console.log("Error in getCollegeJob", error.message);
-    return res.status(500).json({ msg: "Internal Server Error" });
+  } catch (error:any) {
+    console.log("isseue while getCollegePendingJobs :- ",error.message);
+    res.status(500)
+    .json({success:false,data:error.message,message:"Internal Server Issue"})
   }
-};
+}
+
+export const getCollegeAcceptedJobs=async(req:Request,res:Response)=>{
+  try {
+    // @ts-ignore
+    const user =req.user;
+    const faculty=await Faculty.findOne({googleId:user.uid});
+
+    if(!faculty){
+      return res.status(404).json({success:false,msg:"college not found"})
+    }
+
+    const jobs=await CollegeJobLink.find({ college: faculty.faculty_college_id ,status:"accepted"});
+    if(!jobs.length){
+      return res.status(404).json({success:false,msg:"no jobs found"})
+    }
+    return res.status(200).json({success:true,data:jobs,message:"accepted jobs found successfully!"})
+
+  } catch (error:any) {
+    console.log("isseue while getCollegeAcceptedJobs :- ",error.message);
+    res.status(500)
+    .json({success:false,data:error.message,message:"Internal Server Issue"})
+  }
+}
+
+export const getCollegeRejectedJobs=async(req:Request,res:Response)=>{
+  try {
+    // @ts-ignore
+    const user =req.user;
+    const faculty=await Faculty.findOne({googleId:user.uid});
+
+    if(!faculty){
+      return res.status(404).json({success:false,msg:"college not found"})
+    }
+
+    const jobs=await CollegeJobLink.find({ college: faculty.faculty_college_id ,status:"rejected"});
+    if(!jobs.length){
+      return res.status(404).json({success:false,msg:"no jobs found"})
+    }
+    return res.status(200).json({success:true,data:jobs,message:"rejected jobs found successfully!"})
+
+  } catch (error:any) {
+    console.log("isseue while getCollegeRejectedJobs :- ",error.message);
+    res.status(500)
+    .json({success:false,data:error.message,message:"Internal Server Issue"})
+  }
+}
 
 export const getJobDetailsById = async (req: Request, res: Response) => {
   try {
