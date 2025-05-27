@@ -81,7 +81,7 @@ const FacultySchema = new Schema<IFaculty>({
   },
   role: {
     type: String,
-    default: "none", // all roles are like [none, admin, faculty, tpo , student]
+    default: "faculty", // all roles are like [none, admin, faculty, tpo , student]
   },
   googleId: {
     type: String,

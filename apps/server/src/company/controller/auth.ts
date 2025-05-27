@@ -9,7 +9,6 @@ export const isFirstSignIn = async (req: Request, res: Response) => {
     // @ts-ignore
     const user = req.user;
     const existingCompany = await company.findOne({ googleId: user.uid });
-
     return res
       .status(200)
       .json({ success: true, isFirstSignIn: !existingCompany });
@@ -302,3 +301,16 @@ export const createJobByCompany = async (req: Request, res: Response) => {
     return res.status(500).json({ msg: "Internal Server Error" });
   }
 };
+
+
+export const getJobsByCompany = async (req: Request, res: Response) => {
+  try {
+    // @ts-ignore
+    const user = req.user;
+    const jobs = await Job.find({ company: user.uid });
+    return res.status(200).json({ success: true, jobs });
+  } catch (error: any) {
+    console.log("Error in getJobsByCompany", error.message);
+    return res.status(500).json({ msg: "Internal Server Error" });
+  }
+};  

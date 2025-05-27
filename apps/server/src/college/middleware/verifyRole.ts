@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import Faculty from "../models/faculty";
 
-export const getFacultyRole = async (
+export const verifyRole = async (
   req: Request,
   res: Response,
   next: NextFunction
