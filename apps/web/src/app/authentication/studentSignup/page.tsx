@@ -4,8 +4,9 @@ import Vector from "/assets/Fingerprint-amico.svg";
 import Image from "next/image";
 import useThemeStore from "@/store/store";
 import LogoText from "@/components/own/LogoText";
+import SignUpFormStudent from "@/components/own/Form/SignupFormStudent";
 
-export default function StudentLogin() {
+export default function StudentRegister() {
   const { darkMode, toggleDarkMode }: any = useThemeStore();
   return (
     <div className="flex flex-col md:mt-0 md:flex-row w-full h-full fixed">
@@ -14,7 +15,7 @@ export default function StudentLogin() {
         <LogoText />
       </div>
       <div className=" md:w-1/2 flex items-center w-full justify-center flex-col justify h-full">
-        <LoginForm />
+        <SignUpFormStudent/>
       </div>
       <div className="hidden md:w-1/2 bg-dark_secondary_background md:h-auto lg:h-screen md:flex md:items-center md:justify-center">
         <Image

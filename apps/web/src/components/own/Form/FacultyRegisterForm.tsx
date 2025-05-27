@@ -18,7 +18,7 @@ import { useEffect, useState } from "react";
 import { IoLogoApple } from "react-icons/io5";
 import { FcGoogle } from "react-icons/fc";
 
-const SignInFormCompany = () => {
+const SignUpFormCollege = () => {
   const router = useRouter();
   const [user, setUser] = useState(null);
 
@@ -38,18 +38,24 @@ const SignInFormCompany = () => {
       localStorage.setItem("refreshToken", refreshToken);
 
       const signCheckResponse = await axios.get(
-        `${BackendUrl}/api/company/is_first_signin`,
+        `${BackendUrl}/api/college/is_first_signin`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
+      console.log(
+        "Sign check response:",
+        signCheckResponse.data,
+        signCheckResponse.data.success,
+        signCheckResponse.data.isFirstSignIn
+      );
 
       if (token) {
         console.log("ID Token:", token);
         const response = await axios.post(
-          `${BackendUrl}/api/company/google_login`,
+          `${BackendUrl}/api/college/google_login`,
           {},
           {
             headers: {
@@ -58,15 +64,14 @@ const SignInFormCompany = () => {
           }
         );
 
-        if (signCheckResponse.data.success === true) {
-          if (signCheckResponse.data.isFirstSignIn) {
-            router.push("/company/applicationForm");
-          }
-        }
-
-        if (response.data.success === true) {
+        if (
+          signCheckResponse.data.success == true &&
+          signCheckResponse.data.isFirstSignIn
+        ) {
+          router.push("/forms/selectCollege");
+        } else if (response.data.success === true) {
           console.log("User logged in successfully");
-          router.push("/company/dashboard");
+          router.push("/college/dashboard");
         }
       }
     } catch (error) {
@@ -84,13 +89,17 @@ const SignInFormCompany = () => {
 
   const onSubmit = async (data: any) => {
     try {
+        if(data.password!==data.confirmPassword){
+            alert("Passwords do not match.");
+      return;
+        }
       const res = await axios.post(
-        `${BackendUrl}/api/company/is_first_signin_with_email`,
+        `${BackendUrl}/api/college/is_first_signin_with_email`,
         data
       );
 
       // @ts-ignore
-      if (res.data.success) navigator("/company/verifyemail");
+      if (res.data.success) navigator("/college/verifyemail");
     } catch (error: any) {
       console.error("Signup error:", error.message);
     }
@@ -105,7 +114,7 @@ const SignInFormCompany = () => {
 
   return (
     <div className="max-w-md mx-auto mt-12 p-2 rounded-lg bg-transparent md:p-5 flex flex-col gap-4">
-      <h2 className="text-2xl font-bold mb-6">Company SignIn</h2>
+      <h2 className="text-2xl font-bold mb-6 text-primary">Faculty Login</h2>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="mb-4 min-w-40 md:min-w-60 lg:min-w-80">
           <input
@@ -133,6 +142,19 @@ const SignInFormCompany = () => {
             </p>
           )}
         </div>
+        <div className="mb-4 min-w-40 md:min-w-60 lg:min-w-80">
+          <input
+            type="password"
+            {...register("confirm_password")}
+            placeholder="confirm Password"
+            className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-700"
+          />
+          {errors.password && (
+            <p className="text-red-500 text-sm mt-1">
+              {getErrorMessage(errors.password)}
+            </p>
+          )}
+        </div>
         <button
           type="submit"
           className="w-full bg-primary text-white p-2 rounded hover:bg-blue-700"
@@ -151,17 +173,17 @@ const SignInFormCompany = () => {
       </div>
 
       <p>
-        Don&apos;t have an Account?
-        <Link className="text-primary px-2" href="/authentication/companySignup">
-          Sign Up
+        Already have an account?
+        <Link className="text-primary px-2" href="/authentication/facultyLogin">
+          Sign In
         </Link>
       </p>
       <p className="text-[12px]">
         <span className="text-red-500 font-bold">Note:</span> that the email you
-        are using to register Company will be the admin email.
+        are using to register college will be the admin email.
       </p>
     </div>
   );
 };
 
-export default SignInFormCompany;
+export default SignUpFormCollege;

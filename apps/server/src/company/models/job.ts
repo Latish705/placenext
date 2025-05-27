@@ -16,13 +16,11 @@ export interface IJob extends Document {
   job_posted_date: Date;
   yr_of_exp_req: number;
   job_timing: string;
-  status: string;
-  max_no_live_kt: number; //
-  max_no_dead_kt: number; //
+  max_no_live_kt: number; 
+  max_no_dead_kt: number;
   min_CGPI: number;
   branch_allowed: string[];
   passing_year: number[];
-  college: ICollege["_id"];
 }
 
 const JobSchema = new Schema<IJob>({
@@ -87,15 +85,7 @@ const JobSchema = new Schema<IJob>({
   job_timing: {
     type: String,
     required: true,
-  },
-  status: {
-    type: String,
-    required: true,
-  },
-  college: {
-    type: Schema.Types.ObjectId,
-    ref: "College",
-  },
+  }
 });
 
 const Job = primarydb.model("Job", JobSchema);

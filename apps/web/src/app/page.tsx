@@ -16,6 +16,7 @@ import JoiningCard from "@/components/own/Landing/Card/JoiningCard";
 import { InfiniteMovingCards } from "@/components/own/Landing/Card/InfiniteMovingCards";
 import TeamSection from "@/components/own/Landing/TeamSection";
 import BlueLandingText from "@/components/own/Landing/Text/BlueLandingText";
+import JobApplicationStatus from "./company/job_application_status/page";
 
 const inconsolata = Inconsolata({
   subsets: ["latin"],
@@ -56,6 +57,7 @@ export default function Home() {
             <Services />
             <JoiningCard />
             <TeamSection />
+            {/* <JobApplicationStatus/> */}
             <div className="flex flex-col items-center">
               <div className="w-auto px-4">
                 <BlueLandingText text={"Testimonies"} />

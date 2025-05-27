@@ -26,6 +26,7 @@ const CompanySchema = new Schema<ICompany>({
   comp_name: {
     type: String,
     required: true,
+    unique: true,
   },
   comp_start_date: {
     type: Date,

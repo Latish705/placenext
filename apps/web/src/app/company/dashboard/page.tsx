@@ -11,9 +11,8 @@ import StudentStatisticsChart from "@/components/own/Dashboard/StudentStatistics
 import JobCreationForm from "@/components/own/Form/JobCreationForm";
 
 export default function CompanyDashboard() {
-  return;
-  <div>
+  return(<div>
     <h1>Company Dashboard</h1>
     <JobCreationForm />
-  </div>;
+  </div>)
 }

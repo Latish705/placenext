@@ -18,7 +18,7 @@ import { useEffect, useState } from "react";
 import { IoLogoApple } from "react-icons/io5";
 import { FcGoogle } from "react-icons/fc";
 
-const SignInFormCompany = () => {
+const SignUpFormCompany = () => {
   const router = useRouter();
   const [user, setUser] = useState(null);
 
@@ -84,8 +84,12 @@ const SignInFormCompany = () => {
 
   const onSubmit = async (data: any) => {
     try {
+        if(data.password!==data.confirm_password){
+            alert("Passwords do not match.");
+      return;
+        }
       const res = await axios.post(
-        `${BackendUrl}/api/company/is_first_signin_with_email`,
+        `${BackendUrl}/api/company/signup_with_email`,
         data
       );
 
@@ -133,6 +137,19 @@ const SignInFormCompany = () => {
             </p>
           )}
         </div>
+        <div className="mb-4 min-w-40 md:min-w-60 lg:min-w-80">
+          <input
+            type="password"
+            {...register("confirm_password")}
+            placeholder="confirm Password"
+            className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-700"
+          />
+          {errors.password && (
+            <p className="text-red-500 text-sm mt-1">
+              {getErrorMessage(errors.password)}
+            </p>
+          )}
+        </div>
         <button
           type="submit"
           className="w-full bg-primary text-white p-2 rounded hover:bg-blue-700"
@@ -151,9 +168,9 @@ const SignInFormCompany = () => {
       </div>
 
       <p>
-        Don&apos;t have an Account?
-        <Link className="text-primary px-2" href="/authentication/companySignup">
-          Sign Up
+        Already have an account?
+        <Link className="text-primary px-2" href="/authentication/companyLogin">
+          Sign In
         </Link>
       </p>
       <p className="text-[12px]">
@@ -164,4 +181,4 @@ const SignInFormCompany = () => {
   );
 };
 
-export default SignInFormCompany;
+export default SignUpFormCompany;

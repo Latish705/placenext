@@ -160,7 +160,7 @@ const LoginForm = () => {
           Don&apos;t have an Account?
           <Link
             className="text-light_primary_background border-none px-2"
-            href="/signup"
+            href="/authentication/studentSignup"
           >
             Sign Up
           </Link>

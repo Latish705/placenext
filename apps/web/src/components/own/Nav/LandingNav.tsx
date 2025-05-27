@@ -67,6 +67,11 @@ export default function LandingNav() {
                 <span>Faculty Login</span>
               </Button>
             </Link>
+            <Link href="/authentication/companyLogin">
+              <Button className="bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 w-10/12 px-4 py-2">
+                Company Login
+              </Button>
+            </Link>
           </div>
         </div>
         {/* Mobile Menu Icon */}
@@ -108,6 +113,11 @@ export default function LandingNav() {
             <Link href="/authentication/facultyLogin">
               <Button className="bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 w-10/12 px-4 py-2">
                 Faculty Login
+              </Button>
+            </Link>
+            <Link href="/authentication/companyLogin">
+              <Button className="bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 w-10/12 px-4 py-2">
+                Company Login
               </Button>
             </Link>
           </motion.div>
