@@ -236,66 +236,72 @@ export const createJobByCompany = async (req: Request, res: Response) => {
       job_description,
       job_requirements,
       job_posted_date,
+      max_no_dead_kt,
+      max_no_live_kt,
+      min_CGPI,
       yr_of_exp_req,
+      branch_allowed,
+      passing_year,
       job_timing,
       status,
       company_name,
+
     } = req.body;
 
-    console.log(req.body); // Debugging output
+    console.log(req.body); 
 
-    // Check for required fields, including company_name
     if (
       [
         job_title,
         job_type,
-        job_location,
-        job_salary,
-        job_description,
-        job_requirements,
-        job_posted_date,
-        yr_of_exp_req,
-        job_timing,
-        status,
-        company_name, // Ensure company_name is checked
-      ].some((field) => field === "" || field === undefined) // Check for empty or undefined fields
-    ) {
-      return res.status(400).json({ msg: "All fields are required" });
-    }
-
-    // Check for existing job
-    const existingJob = await Job.findOne({ job_title, job_location });
-
-    if (existingJob) {
-      return res.status(400).json({ msg: "Job already exists" });
-    }
-
-    // Find the college based on the logged-in user
-    const foundCollege = await College.findOne({
-      googleId: LogincollegeUser.uid,
-    });
-
-    if (!foundCollege) {
-      return res.status(400).json({ msg: "College not found" });
-    }
-
-    // Create new job
-    const newJob = new Job({
-      job_title,
-      job_type,
       job_location,
-      company_name,
       job_salary,
       job_description,
       job_requirements,
       job_posted_date,
+      max_no_dead_kt,
+      max_no_live_kt,
+      min_CGPI,
       yr_of_exp_req,
+      branch_allowed,
+      passing_year,
       job_timing,
       status,
-      college: foundCollege._id, // Link to college
+      company_name, 
+      ].some((field) => field === "" || field === undefined) 
+    ) {
+      console.log("Missing required fields"); 
+      return res.status(400).json({ msg: "All fields are required" });
+    }
+
+    const existingJob = await Job.findOne({ job_title, job_location });
+
+    if (existingJob) {
+      console.log("Job already exists");
+      return res.status(400).json({ msg: "Job already exists" });
+    }
+
+    const newJob = new Job({
+      job_title,
+      job_type,
+      job_location,
+      job_salary,
+      job_description,
+      job_requirements,
+      job_posted_date,
+      max_no_dead_kt,
+      max_no_live_kt,
+      min_CGPI,
+      yr_of_exp_req,
+      branch_allowed,
+      passing_year,
+      job_timing,
+      status,
+      company_name,
     });
 
     await newJob.save();
+    console.log("Job created successfully:", newJob);
     return res.status(200).json({ success: true, msg: "Job created" });
   } catch (error: any) {
     console.log("Error in createJobByCompany", error.message);

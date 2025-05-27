@@ -1,26 +1,36 @@
 "use client";
 
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SignValidation } from "@/utils/validations/SignValidation";
 import { useRouter } from "next/navigation";
-
 import axios from "axios";
-
-import { BackendUrl } from "@/utils/constants";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useForm } from "react-hook-form";
+import { FcGoogle } from "react-icons/fc";
+
 import firebase, {
   signInWithGoogle,
   signUpAndVerifyEmail,
 } from "@/config/firebase-config";
+import { BackendUrl } from "@/utils/constants";
 
-import { useEffect, useState } from "react";
-import { IoLogoApple } from "react-icons/io5";
-import { FcGoogle } from "react-icons/fc";
-
-const SignInFormCompany = () => {
+const SignUpFormStudent = () => {
   const router = useRouter();
   const [user, setUser] = useState(null);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    watch,
+  } = useForm({
+    resolver: zodResolver(SignValidation),
+  });
+
+  const getErrorMessage = (error: any) => {
+    return error?.message || "Invalid value";
+  };
 
   useEffect(() => {
     const unsubscribe = firebase.auth().onAuthStateChanged((currentUser) => {
@@ -31,6 +41,28 @@ const SignInFormCompany = () => {
     return () => unsubscribe();
   }, []);
 
+  const onSubmit = async (data: any) => {
+    const { email, password } = data;
+    try {
+      const token = await signUpAndVerifyEmail(email, password);
+      localStorage.setItem("token", token);
+      localStorage.setItem("email", email);
+      localStorage.setItem("password", password);
+
+      // Call your backend signup API
+      const response = await axios.post(
+        `${BackendUrl}/api/student/signup_with_email`,
+        { email }
+      );
+
+      if (response.data.success) {
+        router.push("/student/verifyemail");
+      }
+    } catch (error: any) {
+      console.error("Signup error:", error.message);
+    }
+  };
+
   const handleLoginWithGoogle = async () => {
     try {
       const { token, refreshToken } = await signInWithGoogle();
@@ -38,7 +70,7 @@ const SignInFormCompany = () => {
       localStorage.setItem("refreshToken", refreshToken);
 
       const signCheckResponse = await axios.get(
-        `${BackendUrl}/api/company/is_first_signin`,
+        `${BackendUrl}/api/student/is_first_signin`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -46,72 +78,35 @@ const SignInFormCompany = () => {
         }
       );
 
-      if (token) {
-        console.log("ID Token:", token);
-        const response = await axios.post(
-          `${BackendUrl}/api/company/google_login`,
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (signCheckResponse.data.success === true) {
-          if (signCheckResponse.data.isFirstSignIn) {
-            router.push("/company/applicationForm");
-          }
+      const response = await axios.post(
+        `${BackendUrl}/api/student/google_login`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-
-        if (response.data.success === true) {
-          console.log("User logged in successfully");
-          router.push("/company/dashboard");
-        }
-      }
-    } catch (error) {
-      console.error("Error during login:", error);
-    }
-  };
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
-    resolver: zodResolver(SignValidation),
-  });
-
-  const onSubmit = async (data: any) => {
-    try {
-      const res = await axios.post(
-        `${BackendUrl}/api/company/is_first_signin_with_email`,
-        data
       );
 
-      // @ts-ignore
-      if (res.data.success) navigator("/company/verifyemail");
-    } catch (error: any) {
-      console.error("Signup error:", error.message);
+      if (signCheckResponse.data.isFirstSignIn) {
+        router.push("/student/applicationform");
+      } else if (response.data.success) {
+        router.push("/student/dashboard");
+      }
+    } catch (error) {
+      console.error("Google login error:", error);
     }
-  };
-
-  const getErrorMessage = (error: any) => {
-    if (error?.message) {
-      return error.message;
-    }
-    return "Invalid value";
   };
 
   return (
     <div className="max-w-md mx-auto mt-12 p-2 rounded-lg bg-transparent md:p-5 flex flex-col gap-4">
-      <h2 className="text-2xl font-bold mb-6">Company SignIn</h2>
+      <h2 className="text-2xl font-bold mb-6">Student Signup</h2>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="mb-4 min-w-40 md:min-w-60 lg:min-w-80">
+        <div className="mb-4">
           <input
             {...register("email")}
             placeholder="Email"
-            type="text"
+            type="email"
             className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-700"
           />
           {errors.email && (
@@ -120,7 +115,7 @@ const SignInFormCompany = () => {
             </p>
           )}
         </div>
-        <div className="mb-4 min-w-40 md:min-w-60 lg:min-w-80">
+        <div className="mb-4">
           <input
             type="password"
             {...register("password")}
@@ -133,6 +128,19 @@ const SignInFormCompany = () => {
             </p>
           )}
         </div>
+        <div className="mb-4">
+          <input
+            type="password"
+            {...register("confirm_password")}
+            placeholder="Confirm Password"
+            className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-700"
+          />
+          {errors.confirm_password && (
+            <p className="text-red-500 text-sm mt-1">
+              {getErrorMessage(errors.confirm_password)}
+            </p>
+          )}
+        </div>
         <button
           type="submit"
           className="w-full bg-primary text-white p-2 rounded hover:bg-blue-700"
@@ -140,6 +148,7 @@ const SignInFormCompany = () => {
           Submit
         </button>
       </form>
+
       <div className="mt-4">
         <button
           onClick={handleLoginWithGoogle}
@@ -150,18 +159,18 @@ const SignInFormCompany = () => {
         </button>
       </div>
 
-      <p>
-        Don&apos;t have an Account?
-        <Link className="text-primary px-2" href="/signup">
-          Sign Up
+      <p className="mt-4">
+        Already have an account?
+        <Link className="text-primary px-2" href="/signin">
+          Sign In
         </Link>
       </p>
       <p className="text-[12px]">
-        <span className="text-red-500 font-bold">Note:</span> that the email you
-        are using to register Company will be the admin email.
+        <span className="text-red-500 font-bold">Note:</span> The email you use
+        to register will be verified before you can proceed.
       </p>
     </div>
   );
 };
 
-export default SignInFormCompany;
+export default SignUpFormStudent;

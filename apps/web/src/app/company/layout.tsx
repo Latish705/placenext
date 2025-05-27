@@ -5,6 +5,7 @@ import MainNav from "@/components/own/Nav/MainNav";
 
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import JobApplication from "./job_application/page";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -29,8 +30,8 @@ export default function RootLayout({
         <MainNav />
 
         {children}
-        <div className="mt-20"> hello</div>
-        <JobCreationForm />
+        <JobApplication/>
+        
       </div>
     </div>
   );
