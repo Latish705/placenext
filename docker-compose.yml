@@ -1,5 +1,15 @@
 version: "3"
+
 services:
+  backend:
+    build: ./apps/server
+    ports:
+      - "8000:8000"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - placenext_db:/data/db 
+
   frontend:
     build: ./apps/web
     ports:
@@ -9,9 +19,5 @@ services:
     depends_on:
       - backend
 
-  backend:
-    build: ./apps/server
-    ports:
-      - "8000:8000"
-    environment:
-      - NODE_ENV=production
+volumes:
+  placenext_db:

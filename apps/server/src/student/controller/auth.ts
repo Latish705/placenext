@@ -485,6 +485,7 @@ export const getJobForCollege = async (req: Request, res: Response) => {
     // Fetch all jobs posted at the student's college
     const jobs = await Job.find({
       college: student.stud_college_id,
+      status: "approved", 
     });
 
     if (!jobs.length) {
@@ -658,7 +659,7 @@ export const applyToJob = async (req: Request, res: Response) => {
     }
 
     // Ensure that the job exists
-    const job = await Job.findOne({ _id: app_job_id });
+    const job = await Job.findOne({ _id: app_job_id, status: "approved" });
     if (!job) {
       return res.status(404).json({ success: false, msg: "Job not found" });
     }

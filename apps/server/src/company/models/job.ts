@@ -3,11 +3,12 @@ import mongoose from "mongoose";
 import { IStudent } from "../../student/models/student";
 import { ICollege } from "../../college/models/college";
 import { primarydb } from "../..";
+import { ICompany } from "./company";
 
 export interface IJob extends Document {
   _id: string;
   job_title: string;
-  company_name: string;
+  company: ICompany["_id"];
   job_type: string;
   job_location: string;
   job_salary: number;
@@ -34,8 +35,9 @@ const JobSchema = new Schema<IJob>({
     type: String,
     required: true,
   },
-  company_name: {
-    type: String,
+  company: {
+    type: Schema.Types.ObjectId,
+    ref: "Company",
     required: true,
   },
   job_location: {
