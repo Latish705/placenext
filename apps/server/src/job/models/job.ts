@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Schema, Types, model } from "mongoose";
 import mongoose from "mongoose";
 import { IStudent } from "../../student/models/student";
 import { ICollege } from "../../college/models/college";
@@ -7,7 +7,7 @@ import { primarydb } from "../..";
 export interface IJob extends Document {
   _id: string;
   job_title: string;
-  company_name: string;
+  company_name: Types.ObjectId;
   job_type: string;
   job_location: string;
   job_salary: number;
@@ -33,7 +33,7 @@ const JobSchema = new Schema<IJob>({
     required: true,
   },
   company_name: {
-    type: String,
+    type: Schema.Types.ObjectId,
     required: true,
   },
   job_location: {

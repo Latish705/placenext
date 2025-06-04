@@ -6,7 +6,7 @@ import { uploadToGoogleDrive } from "../../config/Google";
 import College from "../../college/models/college";
 import axios from "axios";
 import { Document_server_url } from "../../app";
-import Job, { IJob } from "../../company/models/job";
+import Job, { IJob } from "../../job/models/job";
 import Application from "../models/application";
 import { jobs } from "googleapis/build/src/apis/jobs";
 const requiredFields = [
@@ -14,27 +14,27 @@ const requiredFields = [
   "middleName",
   "lastName",
   "email",
-  "phone",
-  "dob",
-  "course",
-  "year",
-  "department",
+  "phoneNumber",
+  "dateOfBirth",
+  "courseType",
+  // "year",
+  "departmentName",
   "address",
   "college",
-  "addmissionYear",
-  "ssc",
+  "admissionYear",
+  "tenthPercentage",
   "sscBoard",
   "alternateEmail",
-  "alternatePhone",
-  "capAllotment",
-  "photoWithSignature",
-  "gapCertificate",
-  "aadhar",
-  "pan",
+  "alternatePhoneNo",
+  // "capAllotment",
+  // "photoWithSignature",
+  // "gapCertificate",
+  "aadharNumber",
+  "panNumber",
   "liveBacklogs",
   "deadBacklogs",
   "placementStatus",
-  "skills",
+  "skills", 
   "linkedIn",
   "github",
   "collegeId",
@@ -94,6 +94,7 @@ export const isFirstSignIn = async (req: Request, res: Response) => {
 
 export const applicationFrom = async (req: Request, res: Response) => {
   try {
+    console.log("req body:-" ,req);
     // @ts-ignore
     const user = req.user;
 

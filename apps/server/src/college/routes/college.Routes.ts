@@ -6,7 +6,6 @@ import {
   createJobByCollege,
   facultyProfile,
   getAllStudentList,
-  getCollegeJob,
   getCollegeJobs,
   getColleges,
   getDepartmentStatistics,
@@ -49,12 +48,12 @@ collegeRoutes.get(
 
 // college job routes
 
-collegeRoutes.get("/get_jobs", authenticateToken, getCollegeJobs);
+// collegeRoutes.get("/get_jobs", authenticateToken, getCollegeJobs);
 collegeRoutes.get("/get_job/:id", authenticateToken);
 
 collegeRoutes.post("/create_job", authenticateToken, createJobByCollege);
 
-collegeRoutes.get("/companies", authenticateToken, getCollegeJob);
+collegeRoutes.get("/companies", authenticateToken, getCollegeJobs);
 collegeRoutes.get("/company/:id", authenticateToken, getJobDetailsById);
 
 // role base access routes

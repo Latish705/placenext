@@ -2,13 +2,13 @@ import { Request, Response } from "express";
 import College from "../models/college";
 import Student from "../../student/models/student";
 import StudentInfo from "../../student/models/info_student";
-import Job from "../../company/models/job";
+import Job from "../../job/models/job";
 import Application from "../../student/models/application";
 import * as XLSX from "xlsx";
 import Faculty from "../models/faculty";
 import Department from "../models/department";
 import { redis } from "../..";
-import CollegeJobLink from "../../company/models/collegeJobLink";
+import CollegeJobLink from "../../job/models/collegeJobLink";
 
 export const isFirstSignIn = async (req: Request, res: Response) => {
   try {

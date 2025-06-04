@@ -1,6 +1,5 @@
 import { model, Schema } from "mongoose";
 
-import mongoose from "mongoose";
 import { primarydb } from "../..";
 
 export interface ICompany extends Document {
