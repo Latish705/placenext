@@ -1,44 +1,28 @@
 "use client";
 
-import React, { useState } from "react";
+import { useForm } from "react-hook-form";
 import axios from "axios";
 import { BackendUrl } from "@/utils/constants";
+import { useRouter } from "next/navigation";
 
-export default function Application() {
-  const [formData, setFormData] = useState({
-    comp_name: "",
-    comp_start_date: "",
-    comp_contact_person: "",
-    comp_email: "",
-    comp_industry: "",
-    com_positions_offered: "",
-    comp_address: "",
-    comp_jobs_offered: "",
-    comp_no_employs: "",
-    comp_website: "",
-    comp_location: "",
-    comp_contact_no: "",
-    comp_departments: "",
-    comp_no_of_stud: "",
-    comp_courses_offered: "",
-  });
+export default function CompanyApplicationForm() {
+  const router = useRouter();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const onSubmit = async (data: any) => {
     const payload = {
-      ...formData,
-      com_positions_offered: formData.com_positions_offered.split(",").map((s) => s.trim()),
-      comp_jobs_offered: formData.comp_jobs_offered.split(",").map((s) => s.trim()),
-      comp_departments: formData.comp_departments.split(",").map((s) => s.trim()),
-      comp_courses_offered: formData.comp_courses_offered.split(",").map((s) => s.trim()),
-      comp_no_employs: Number(formData.comp_no_employs),
-      comp_no_of_stud: Number(formData.comp_no_of_stud),
+      ...data,
+      com_positions_offered: data.com_positions_offered.split(",").map((s: string) => s.trim()),
+      comp_jobs_offered: data.comp_jobs_offered.split(",").map((s: string) => s.trim()),
+      comp_departments: data.comp_departments.split(",").map((s: string) => s.trim()),
+      comp_courses_offered: data.comp_courses_offered.split(",").map((s: string) => s.trim()),
+      comp_no_employs: Number(data.comp_no_employs),
+      comp_no_of_stud: Number(data.comp_no_of_stud),
     };
 
     try {
@@ -51,100 +35,88 @@ export default function Application() {
       });
 
       if (res.data.success) {
-        alert("Company application submitted successfully!");
+        alert("Company application form submitted successfully");
+        router.push("/company/dashboard");
       } else {
         alert(res.data.msg || "Submission failed.");
       }
     } catch (error: any) {
-      console.error("Submission error:", error);
       alert(error?.response?.data?.msg || "Something went wrong.");
     }
   };
 
-  const Input = ({
-    label,
-    name,
-    type = "text",
-  }: {
-    label: string;
-    name: string;
-    type?: string;
-  }) => (
-    <div style={{ marginBottom: "15px" }}>
-      <label style={{ display: "block", fontWeight: "bold", marginBottom: "5px" }}>{label}</label>
-      <input
-        type={type}
-        name={name}
-        value={formData[name as keyof typeof formData]}
-        onChange={handleChange}
-        required
-        style={{
-          width: "100%",
-          padding: "10px",
-          borderRadius: "5px",
-          border: "1px solid #ccc",
-        }}
-      />
-    </div>
-  );
-
-  const Textarea = ({
-    label,
-    name,
-  }: {
-    label: string;
-    name: string;
-  }) => (
-    <div style={{ marginBottom: "15px" }}>
-      <label style={{ display: "block", fontWeight: "bold", marginBottom: "5px" }}>{label}</label>
-      <textarea
-        name={name}
-        value={formData[name as keyof typeof formData]}
-        onChange={handleChange}
-        required
-        rows={3}
-        style={{
-          width: "100%",
-          padding: "10px",
-          borderRadius: "5px",
-          border: "1px solid #ccc",
-        }}
-      />
-    </div>
-  );
+  const getErrorMessage = (error: any) => {
+    if (typeof error === "string") return error;
+    if (error && error.message) return error.message;
+    return "Invalid value";
+  };
 
   return (
-    <div style={{ maxWidth: "800px", margin: "40px auto", padding: "20px", border: "1px solid #ddd", borderRadius: "8px" }}>
-      <h2 style={{ fontSize: "24px", marginBottom: "20px", textAlign: "center" }}>Company Application Form</h2>
-      <form onSubmit={handleSubmit}>
-        <Input label="Company Name" name="comp_name" />
-        <Input label="Start Date" name="comp_start_date" type="date" />
-        <Input label="Contact Person" name="comp_contact_person" />
-        <Input label="Email" name="comp_email" type="email" />
-        <Input label="Industry" name="comp_industry" />
-        <Textarea label="Positions Offered (comma-separated)" name="com_positions_offered" />
-        <Textarea label="Address" name="comp_address" />
-        <Textarea label="Jobs Offered (comma-separated)" name="comp_jobs_offered" />
-        <Input label="No. of Employees" name="comp_no_employs" type="number" />
-        <Input label="Website" name="comp_website" />
-        <Input label="Location" name="comp_location" />
-        <Input label="Contact Number" name="comp_contact_no" />
-        <Textarea label="Departments (comma-separated)" name="comp_departments" />
-        <Input label="No. of Students Required" name="comp_no_of_stud" type="number" />
-        <Textarea label="Courses Offered (comma-separated)" name="comp_courses_offered" />
+    <div className="max-w-2xl mx-auto mt-12 p-6 rounded-lg shadow-lg bg-white">
+      <h2 className="text-3xl font-semibold mb-6 text-center text-gray-800">
+        Company Application Form
+      </h2>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 gap-6">
+        {[ 
+          { name: "comp_name", label: "Company Name", type: "text" },
+          { name: "comp_start_date", label: "Start Date", type: "date" },
+          { name: "comp_contact_person", label: "Contact Person", type: "text" },
+          { name: "comp_industry", label: "Industry", type: "text" },
+          { name: "comp_website", label: "Website", type: "url" },
+          { name: "comp_no_employs", label: "No. of Employees", type: "number" },
+          { name: "comp_contact_no", label: "Contact Number", type: "text" },
+          { name: "comp_location", label: "Location", type: "text" },
+          { name: "comp_no_of_stud", label: "No. of Students Required", type: "number" },
+        ].map((field) => (
+          <div key={field.name}>
+            <label className="block text-gray-700 font-medium mb-1">{field.label}</label>
+            <input
+              type={field.type}
+              {...register(field.name, { required: `${field.label} is required` })}
+              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            {errors[field.name] && (
+              <p className="text-red-500 text-sm mt-1">{getErrorMessage(errors[field.name])}</p>
+            )}
+          </div>
+        ))}
+
+        {[
+          { name: "com_positions_offered", label: "Positions Offered (comma-separated)" },
+          { name: "comp_jobs_offered", label: "Jobs Offered (comma-separated)" },
+          { name: "comp_departments", label: "Departments (comma-separated)" },
+          { name: "comp_courses_offered", label: "Courses Offered (comma-separated)" },
+        ].map((field) => (
+          <div key={field.name}>
+            <label className="block text-gray-700 font-medium mb-1">{field.label}</label>
+            <textarea
+              {...register(field.name, { required: `${field.label} is required` })}
+              rows={3}
+              placeholder="E.g., Software Engineer, HR"
+              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            {errors[field.name] && (
+              <p className="text-red-500 text-sm mt-1">{getErrorMessage(errors[field.name])}</p>
+            )}
+          </div>
+        ))}
+
+        <div>
+          <label className="block text-gray-700 font-medium mb-1">Address</label>
+          <textarea
+            {...register("comp_address", { required: "Address is required" })}
+            rows={3}
+            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {errors.comp_address && (
+            <p className="text-red-500 text-sm mt-1">{getErrorMessage(errors.comp_address)}</p>
+          )}
+        </div>
+
         <button
           type="submit"
-          style={{
-            width: "100%",
-            padding: "12px 20px",
-            backgroundColor: "#0070f3",
-            color: "#fff",
-            border: "none",
-            borderRadius: "5px",
-            fontSize: "16px",
-            cursor: "pointer",
-            marginTop: "20px",
-          }}
+          className="w-full bg-blue-600 text-white p-3 rounded-md hover:bg-blue-700 transition duration-300"
         >
           Submit Application
         </button>

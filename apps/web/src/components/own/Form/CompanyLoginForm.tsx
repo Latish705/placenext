@@ -23,56 +23,70 @@ const SignInFormCompany = () => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const unsubscribe = firebase.auth().onAuthStateChanged((currentUser) => {
-      //@ts-ignore
-      setUser(currentUser);
-    });
+  const unsubscribe = firebase.auth().onIdTokenChanged((currentUser) => {
+    //@ts-ignore
+    setUser(currentUser);
+  });
 
-    return () => unsubscribe();
-  }, []);
+  return () => unsubscribe();
+}, []);
 
-  const handleLoginWithGoogle = async () => {
-    try {
-      const { token, refreshToken } = await signInWithGoogle();
-      localStorage.setItem("token", token);
-      localStorage.setItem("refreshToken", refreshToken);
 
-      const signCheckResponse = await axios.get(
-        `${BackendUrl}/api/company/is_first_signin`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+const handleLoginWithGoogle = async () => {
+  try {
+    await firebase.auth().signOut();
+    await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);
 
-      if (token) {
-        console.log("ID Token:", token);
-        const response = await axios.post(
-          `${BackendUrl}/api/company/google_login`,
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+    // Sign in with Google and get the token
+    const { token } = await signInWithGoogle();
+    localStorage.setItem("token", token);
 
-        if (signCheckResponse.data.success === true) {
-          if (signCheckResponse.data.isFirstSignIn) {
-            router.push("/company/applicationForm");
-          }
-        }
-
-        if (response.data.success === true) {
-          console.log("User logged in successfully");
-          router.push("/company/dashboard");
-        }
-      }
-    } catch (error) {
-      console.error("Error during login:", error);
+    // Get current logged in user directly, no listeners inside this function
+    const newUser = firebase.auth().currentUser;
+    if (!newUser) {
+      console.error("No user found after Google sign-in");
+      return;
     }
-  };
+
+    const idToken = await newUser.getIdToken();
+    const email = newUser.email ?? "";
+
+    localStorage.setItem("company_email", email);
+
+    // Check if first sign-in
+    const signCheckResponse = await axios.get(
+      `${BackendUrl}/api/company/is_first_signin`,
+      {
+        headers: { Authorization: `Bearer ${idToken}` },
+      }
+    );
+
+    if (signCheckResponse.data.success && signCheckResponse.data.isFirstSignIn) {
+      // Redirect to application form
+      router.push("/company/application");
+      return;
+    }
+
+    // If not first sign-in, login normally
+    const response = await axios.post(
+      `${BackendUrl}/api/company/google_login`,
+      { email },
+      {
+        headers: { Authorization: `Bearer ${idToken}` },
+      }
+    );
+
+    if (response.data.success) {
+      router.push("/company/dashboard");
+    } else {
+      console.error("Google login failed:", response.data.msg);
+    }
+  } catch (error) {
+    console.error("Error during Google login:", error);
+  }
+};
+
+
 
   const {
     register,

@@ -52,7 +52,9 @@ export default function MainNav() {
     try {
       logout();
       console.log("User signed out");
-      if (path === "college") {
+      if(path=='company'){
+        router.push('/authentication/companyLogin')
+      }else if (path === "college") {
         router.push("/authentication/facultyLogin");
       } else {
         router.push("/authentication/studentLogin");
@@ -69,7 +71,9 @@ export default function MainNav() {
           <div>
             <h1 className="text-lg font-bold">TPO Dashboard</h1>
           </div>
-        ) : (
+        ) : path==='company' ? (<div>
+            <h1 className="text-lg font-bold">Company Dashboard</h1>
+          </div>) :(
           <div>
             <h1 className="text-lg font-bold">Student Dashboard</h1>
           </div>

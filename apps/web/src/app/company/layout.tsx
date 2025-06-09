@@ -23,15 +23,15 @@ export default function RootLayout({
     <div className="flex flex-row w-full h-full">
       <div className="fixed top-0 left-0 z-50 lg:relative lg:block">
         {/* this will contain sidebar */}
-        <CompanySidebar />
+        <CompanySidebar/>
       </div>
       <div className="w-full h-full flex flex-col bg-primary_background">
         {/* this will contain navbar and main content */}
         <MainNav />
 
-        {children}
-        <JobApplication/>
-        
+        <section className="pt-20 max-h-screen overflow-auto">
+          {children}
+        </section>
       </div>
     </div>
   );
