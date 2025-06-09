@@ -1257,3 +1257,19 @@ export const getDepartmentStatistics = async (req: Request, res: Response) => {
     return res.status(500).json({ msg: "Internal Server Error" });
   }
 };
+
+export const getAllColleges=async(req:Request,res:Response)=>{
+  try {
+    const colleges=await College.find({});
+    console.log("colleges:-",colleges);
+    return res.status(200).json({success:true,message:"all colleges fetched successfully!",data:colleges});
+  } catch (error:any) {
+    console.log("error in getAllColleges:-",error);
+    return res.status(500)
+    .json({
+      success:false,
+      message:"error in getAllColleges",
+      data:error.message
+    })
+  }
+}

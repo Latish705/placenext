@@ -7,11 +7,17 @@ export const authenticateToken = async (
   next: NextFunction
 ) => {
   try {
-    const token =
-      req.headers.authorization?.split(" ")[1] ||
-      req.body.refreshToken.toString();
+    // Safely extract token either from Authorization header or refreshToken in body
+    let token: string | null = null;
 
-    console.log(token);
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith("Bearer ")
+    ) {
+      token = req.headers.authorization.split(" ")[1];
+    } else if (req.body.refreshToken) {
+      token = req.body.refreshToken.toString();
+    }
 
     if (!token) {
       return res.status(401).json({ error: "Access Denied" });
@@ -19,9 +25,9 @@ export const authenticateToken = async (
 
     try {
       const decodedUser = await admin.auth().verifyIdToken(token);
+
       if (decodedUser.exp * 1000 < Date.now()) {
         // Token has expired
-
         return res.status(403).json({ error: "Token Expired" });
       }
 
@@ -30,8 +36,9 @@ export const authenticateToken = async (
       next();
     } catch (error: any) {
       if (error.code === "auth/id-token-expired") {
-        // Refresh token logic here
+        // Refresh token logic here (optional)
         console.error("Token expired, need to refresh");
+        return res.status(403).json({ error: "Token Expired" });
       } else {
         console.error("Error verifying token:", error);
         return res.status(403).json({ error: "Invalid Token" });

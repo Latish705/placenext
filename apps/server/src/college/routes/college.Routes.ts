@@ -5,6 +5,7 @@ import {
   collegeAuth,
   createJobByCollege,
   facultyProfile,
+  getAllColleges,
   getAllStudentList,
   getCollegeJobs,
   getColleges,
@@ -89,5 +90,6 @@ collegeRoutes.get(
   authenticateToken,
   getDepartmentStatistics
 );
+collegeRoutes.get('/getAllColleges',getAllColleges);
 
 export default collegeRoutes;

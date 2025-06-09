@@ -45,7 +45,7 @@ const companyOptions: Option[] = [
   },
   {
     name: "Post Jobs",
-    path: "/company/job_postings",
+    path: "/company/job_application",
     icon: <BiCategoryAlt />,
   },
   {
