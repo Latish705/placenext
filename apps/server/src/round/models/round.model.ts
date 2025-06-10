@@ -1,32 +1,31 @@
-import { Schema, Types, model } from "mongoose";
+import { Request, Response } from "express";
+import { Schema, Types, model, Document } from "mongoose";
 import { primarydb } from "../..";
+import mongoose from 'mongoose';
 export interface IRound extends Document {
-    _id:string,
-    job_id:Types.ObjectId,
-    round_number:number,
-    round_type:string,
-    isNextRound:boolean
+    _id: Types.ObjectId;
+    job_id: Types.ObjectId;
+    round_number: number;
+    round_type: string;
+    isNextRound: boolean;
 }
-
-const RoundSchema=new Schema<IRound>({
-    job_id:{
-        type:Schema.Types.ObjectId,
-        ref:"Job"
+const RoundSchema = new Schema<IRound>({
+    job_id: {
+        type: Schema.Types.ObjectId,
+        ref: "Job"
     },
-    round_number:{
+    round_number: {
         type: Number,
-        required:true
+        required: true
     },
-    round_type:{
+    round_type: {
         type: String,
-        required:true
+        required: true
     },
-    isNextRound:{
+    isNextRound: {
         type: Boolean,
-        required:true
-
+        required: true
     }
-})
-
-const Round =primarydb.model("Round",RoundSchema);
+});
+const Round = primarydb.model("Round", RoundSchema);
 export default Round;

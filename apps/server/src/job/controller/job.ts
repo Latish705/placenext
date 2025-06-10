@@ -119,7 +119,7 @@ for (const c of college) {
       }
 
       console.log("clg: Job linked with new colleges successfully.");
-      return res.status(201).json({
+      return res.status(200).json({
         success: true,
         message: "Job already existed. Linked successfully with new colleges.",
         job: existingJob,

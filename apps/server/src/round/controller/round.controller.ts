@@ -6,47 +6,58 @@ import RoundStudentLink from "../models/roundstudentlink";
 import Student from "../../student/models/student";
 import mongoose from "mongoose";
 
-export  const createRound =async(req:Request,res:Response)=>{
+
+export const createRound = async (req: Request, res: Response) => {
     try {
-        const {job_id,round_type}=req.body;
-        if(!job_id || !round_type){
-            return res.status(400)
-            .json({
-                success:false,
-                message:"all fields are required"
-            })
+        const { job_id, round_type} = req.body;
+        if (!job_id || !round_type) {
+            return res.status(400).json({
+                success: false,
+                message: "All fields are required"
+            });
         }
+        console.log("req body:-",req.body);
         const job = await Job.findById(job_id);
-        if(!job){
-            return res.status(400)
-            .json({
-                success:false,
-                message:"no job related to the given job_id"
-            })
+        if (!job) {
+            return res.status(400).json({
+                success: false,
+                message: "No job found with the given job_id"
+            });
         }
-        const numberOfRounds=await Round.countDocuments({job_id:job_id});
-        if(numberOfRounds>0){
-            const prevRound = await Round.findOne({ job_id, round_number: numberOfRounds }); 
-            prevRound.isNextRound=true;
-            await prevRound.save();
+        console.log("job ",job);
+        const numberOfRounds = await Round.countDocuments({ job_id: job_id });
+        console.log("numberofrounds:-",numberOfRounds);
+        if (numberOfRounds > 0) {
+            await Round.findOneAndUpdate(
+                {
+                    job_id: job_id,
+                    round_number: numberOfRounds
+                },
+                { isNextRound: true }
+            );
         }
-        const new_round=await Round.create({job_id:job_id,round_number:numberOfRounds+1,round_type:round_type,isNextRound:false});
-        return res.status(200)
-        .json({
-            success:true,
-            data:new_round,
-            message:"new round created successfully!"
-        })
-    } catch (error:any) {
-        console.log("error in createRound:- ",error.message);
-        return res.status(500)
-        .json({
-            success:false,
-            message:"issue while creating new round",
-            data:error.message
-        })
+        const new_round = await Round.create({
+
+            job_id,
+            round_number: numberOfRounds + 1,
+            round_type,
+            isNextRound: false
+        });
+        console.log("newround:-",new_round);
+        return res.status(200).json({
+            success: true,
+            data: new_round[0],
+            message: "New round created successfully!"
+        });
+    } catch (error: any) {
+        console.log("Error in createRound:", error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Issue while creating new round",
+            error: error.message
+        });
     }
-}
+};
 
 export const studentApplyToTheJob = async (req: Request, res: Response) => {
   try {
