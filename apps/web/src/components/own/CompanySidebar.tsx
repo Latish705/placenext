@@ -49,6 +49,11 @@ const companyOptions: Option[] = [
     icon: <BiCategoryAlt />,
   },
   {
+    name: "jobs",
+    path: "/company/jobs",
+    icon: <BiCategoryAlt/>
+  },
+  {
     name: "Applications",
     path: "/company/applications",
     icon: <FaUserDoctor />,

@@ -13,10 +13,12 @@ export interface IRoundStudentLink extends Document{
 const RoundStudentLi =new Schema<IRoundStudentLink>({
     round_id:{
         type: Schema.Types.ObjectId,
+        ref: "Round",
         required:true
     },
     student_id:{
         type:Schema.Types.ObjectId,
+        ref: "Student",
         required:true
     }
 })

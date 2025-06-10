@@ -4,6 +4,8 @@ import CollegeJobLink from "../models/collegeJobLink";
 import Company from "../../company/models/company";
 import College from "../../college/models/college";
 import mongoose from "mongoose";
+import Round from "../../round/models/round.model";
+import RoundStudentLink from "../../round/models/roundstudentlink";
 export const createJobByCompany = async (req: Request, res: Response) => {
   try {
     // @ts-ignore - if you don't have proper type, ignore for now
@@ -177,84 +179,213 @@ for (const c of college) {
 
 export const getAllPendingJobRequest = async (req: Request, res: Response) => {
   try {
-    const { company_name } = req.body;
-
-    if (!company_name) {
+    // @ts-ignore
+    const loginCompanyUser = req.user;
+    
+    const company = await Company.findOne({ googleId: loginCompanyUser.uid });
+    if (!company) {
       return res.status(400).json({
         success: false,
-        message: "company_name is required",
+        message: "Company not found"
       });
     }
-    const pendingJobs = await CollegeJobLink.find({ status: "pending" }).populate("job_info");
 
-    const filteredJobs = pendingJobs.filter(
-      (link: any) => link.job_info?.company_name === company_name
-    );
+    const pendingJobs = await CollegeJobLink.find({ 
+      status: "pending" 
+    }).populate({
+      path: 'job_info',
+      match: { company_name: company._id }
+    }).populate('college', 'coll_name');
+
+    const filteredJobs = pendingJobs.filter((link: { job_info: null; }) => link.job_info !== null);
 
     return res.status(200).json({
       success: true,
       message: "Pending jobs fetched successfully",
-      jobs: filteredJobs,
+      data: filteredJobs
     });
   } catch (error: any) {
-    console.error("Error in getAllPendingJobRequest:", error.message);
-    return res.status(500).json({ message: "Internal Server Error" });
+    console.error("Error in getAllPendingJobRequest:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
   }
 };
 
-
 export const getAllAcceptedJobRequest = async (req: Request, res: Response) => {
- try {
-    const { company_name } = req.body;
-
-    if (!company_name) {
+  try {
+    // @ts-ignore
+    const loginCompanyUser = req.user;
+    
+    const company = await Company.findOne({ googleId: loginCompanyUser.uid });
+    if (!company) {
       return res.status(400).json({
         success: false,
-        message: "company_name is required",
+        message: "Company not found"
       });
     }
-    const pendingJobs = await CollegeJobLink.find({ status: "accepted" }).populate("job_info");
 
-    const filteredJobs = pendingJobs.filter(
-      (link: any) => link.job_info?.company_name === company_name
-    );
+    const acceptedJobs = await CollegeJobLink.find({ 
+      status: "accepted" 
+    }).populate({
+      path: 'job_info',
+      match: { company_name: company._id }
+    }).populate('college', 'coll_name');
+
+    const filteredJobs = acceptedJobs.filter((link: { job_info: null; }) => link.job_info !== null);
 
     return res.status(200).json({
       success: true,
-      message: "Acccepted jobs fetched successfully",
-      jobs: filteredJobs,
+      message: "Accepted jobs fetched successfully",
+      data: filteredJobs
     });
   } catch (error: any) {
-    console.error("Error in getAllAcceptedJobRequest:", error.message);
-    return res.status(500).json({ message: "Internal Server Error" });
+    console.error("Error in getAllAcceptedJobRequest:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
   }
 };
 
-
 export const getAllRejectedJobRequest = async (req: Request, res: Response) => {
   try {
-    const { company_name } = req.body;
-
-    if (!company_name) {
+    // @ts-ignore
+    const loginCompanyUser = req.user;
+    
+    const company = await Company.findOne({ googleId: loginCompanyUser.uid });
+    if (!company) {
       return res.status(400).json({
         success: false,
-        message: "company_name is required",
+        message: "Company not found"
       });
     }
-    const pendingJobs = await CollegeJobLink.find({ status: "rejected" }).populate("job_info");
 
-    const filteredJobs = pendingJobs.filter(
-      (link: any) => link.job_info?.company_name === company_name
-    );
+    const rejectedJobs = await CollegeJobLink.find({ 
+      status: "rejected" 
+    }).populate({
+      path: 'job_info',
+      match: { company_name: company._id }
+    }).populate('college', 'coll_name');
+
+    const filteredJobs = rejectedJobs.filter((link: { job_info: null; }) => link.job_info !== null);
 
     return res.status(200).json({
       success: true,
       message: "Rejected jobs fetched successfully",
-      jobs: filteredJobs,
+      data: filteredJobs
     });
   } catch (error: any) {
-    console.error("Error in getAllrejectedJobRequest:", error.message);
-    return res.status(500).json({ message: "Internal Server Error" });
+    console.error("Error in getAllRejectedJobRequest:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
+  }
+};
+
+export const getjobdetail = async (req: Request, res: Response) => {
+  try {
+    const { job_id } = req.params;
+    if (!job_id) {
+      return res.status(400).json({
+        success: false,
+        message: "job_id is required"
+      });
+    }
+
+    const job = await Job.findById(job_id);
+    if (!job) {
+      return res.status(400).json({
+        success: false,
+        message: "Job not found"
+      });
+    }
+
+    const jobDetail: {
+      _id: typeof job._id,
+      job_title: typeof job.job_title,
+      job_description: typeof job.job_description,
+      job_location: typeof job.job_location,
+      job_salary: typeof job.job_salary,
+      rounds: any[]
+    } = {
+      _id: job._id,
+      job_title: job.job_title,
+      job_description: job.job_description,
+      job_location: job.job_location,
+      job_salary: job.job_salary,
+      rounds: []
+    };
+
+    const rounds = await Round.find({ job_id: job._id }).sort({ round_number: 1 });
+    
+    const processedRounds = await Promise.all(rounds.map(async (round: { _id: any; round_type: any; round_number: any; }) => {
+      try {
+        const studentLinks = await RoundStudentLink.find({ round_id: round._id })
+          .populate({
+            path: 'student_id',
+            model: 'Student',  
+            select: 'stud_name stud_department stud_year', 
+            populate: {
+              path: 'stud_department',
+              model: 'Department',
+              select: 'dept_name'
+            }
+          })
+          .lean(); 
+
+        console.log("studentLinks:-", JSON.stringify(studentLinks, null, 2));
+
+        const student_list = studentLinks.map((link: { student_id: {}; selected: any; }) => {
+
+          const student = (link?.student_id || {}) as {
+            _id?: any;
+            stud_name?: string;
+            stud_department?: string;
+            stud_year?: number;
+          };
+          
+          return {
+            student_id: student._id || '',
+            name: student.stud_name,
+            division: student.stud_department,
+            year: student.stud_year
+          };
+        });
+
+        return {
+          _id: round._id,
+          round_type: round.round_type,
+          round_number: round.round_number,
+          student_list
+        };
+      } catch (error) {
+        console.error(`Error processing round ${round._id}:`, error);
+        return {
+          _id: round._id,
+          round_type: round.round_type,
+          round_number: round.round_number,
+          student_list: []
+        };
+      }
+    }));
+
+    jobDetail.rounds = processedRounds;
+
+    return res.status(200).json({
+      success: true,
+      data: jobDetail
+    });
+
+  } catch (error: any) {
+    console.error("Error in getjobdetail:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error in getjobdetail",
+      error: error.message
+    });
   }
 };
 
