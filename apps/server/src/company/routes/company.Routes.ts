@@ -1,7 +1,6 @@
 import Router from "express";
 import {
-  applicationFrom,
-  createJobByCompany,
+  createCompanyApplication,
   isFirstSignIn,
   signup,
 } from "../controller/auth";
@@ -13,8 +12,7 @@ companyRoutes.get("/is_first_signin", authenticateToken, isFirstSignIn);
 
 companyRoutes.post("/google_login", authenticateToken, signup);
 
-companyRoutes.post("/applicationForm", authenticateToken, applicationFrom);
+companyRoutes.post("/applicationForm", authenticateToken, createCompanyApplication);
 
-companyRoutes.post("/create_job", authenticateToken, createJobByCompany);
 
 export default companyRoutes;

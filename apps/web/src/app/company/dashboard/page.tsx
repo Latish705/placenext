@@ -8,12 +8,10 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/solid";
 import StudentStatisticsChart from "@/components/own/Dashboard/StudentStatisticsChart";
-import JobCreationForm from "@/components/own/Form/JobCreationForm";
+import Application from "../application/page";
 
 export default function CompanyDashboard() {
-  return;
-  <div>
+  return(<div>
     <h1>Company Dashboard</h1>
-    <JobCreationForm />
-  </div>;
+  </div>)
 }

@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
 
-// Create reusable transporter
+
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 587,
@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Generic send email function
+
 async function sendEmail(
   template: (email: string, ...args: any[]) => any,
   email: string,

@@ -1,6 +1,5 @@
 import { model, Schema } from "mongoose";
 
-import mongoose from "mongoose";
 import { primarydb } from "../..";
 
 export interface ICompany extends Document {
@@ -20,12 +19,14 @@ export interface ICompany extends Document {
   comp_departments: string[];
   comp_no_of_stud: number;
   comp_courses_offered: string[];
+  googleId: string;
 }
 
 const CompanySchema = new Schema<ICompany>({
   comp_name: {
     type: String,
     required: true,
+    unique: true,
   },
   comp_start_date: {
     type: Date,
@@ -83,8 +84,12 @@ const CompanySchema = new Schema<ICompany>({
     type: [String],
     required: true,
   },
+  googleId: {
+    type: String,
+    required: true,
+  },
 });
 
-const Company = primarydb.model("company", CompanySchema);
+const Company = primarydb.model("Company", CompanySchema);
 
 export default Company;

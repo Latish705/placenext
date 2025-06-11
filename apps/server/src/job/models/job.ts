@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Schema, Types, model } from "mongoose";
 import mongoose from "mongoose";
 import { IStudent } from "../../student/models/student";
 import { ICollege } from "../../college/models/college";
@@ -7,7 +7,7 @@ import { primarydb } from "../..";
 export interface IJob extends Document {
   _id: string;
   job_title: string;
-  company_name: string;
+  company_name: Types.ObjectId;
   job_type: string;
   job_location: string;
   job_salary: number;
@@ -16,13 +16,11 @@ export interface IJob extends Document {
   job_posted_date: Date;
   yr_of_exp_req: number;
   job_timing: string;
-  status: string;
-  max_no_live_kt: number; //
-  max_no_dead_kt: number; //
+  max_no_live_kt: number; 
+  max_no_dead_kt: number;
   min_CGPI: number;
   branch_allowed: string[];
   passing_year: number[];
-  college: ICollege["_id"];
 }
 
 const JobSchema = new Schema<IJob>({
@@ -35,7 +33,7 @@ const JobSchema = new Schema<IJob>({
     required: true,
   },
   company_name: {
-    type: String,
+    type: Schema.Types.ObjectId,
     required: true,
   },
   job_location: {
@@ -87,15 +85,7 @@ const JobSchema = new Schema<IJob>({
   job_timing: {
     type: String,
     required: true,
-  },
-  status: {
-    type: String,
-    required: true,
-  },
-  college: {
-    type: Schema.Types.ObjectId,
-    ref: "College",
-  },
+  }
 });
 
 const Job = primarydb.model("Job", JobSchema);

@@ -13,22 +13,23 @@ import {
   Button,
 } from "@mui/material";
 import { useState, useEffect } from "react";
+import MenuIcon from "@mui/icons-material/Menu";
 import ImportContactsTwoToneIcon from "@mui/icons-material/ImportContactsTwoTone";
-import { BiCategoryAlt } from "react-icons/bi";
+import { BiCategoryAlt, BiMessageSquareMinus } from "react-icons/bi";
 import { FaUserDoctor } from "react-icons/fa6";
-import { BiMessageSquareMinus } from "react-icons/bi";
 import { CiSettings } from "react-icons/ci";
 import { motion } from "framer-motion";
-import MenuIcon from "@mui/icons-material/Menu";
 import { useRouter } from "next/navigation";
+import { getAuth } from "firebase/auth";
+import { logout } from "@/config/firebase-config";
+
 import HelpCard from "./HelpCard";
 import LogoText from "./LogoText";
-import { getAuth, signOut } from "firebase/auth";
-import { logout } from "@/config/firebase-config";
 
 interface Option {
   name: string;
   path: string;
+  icon: React.ReactNode;
 }
 
 const drawerVariants = {
@@ -36,20 +37,37 @@ const drawerVariants = {
   visible: { x: 0 },
 };
 
-const options: Option[] = [
-  { name: "Dashboard", path: "/student/dashboard" },
-  { name: "Apply for Jobs", path: "/student/applyjob" },
-  { name: "Messages", path: "/messages/inbox" },
-  { name: "Profile", path: "/student/profile" },
-  { name: "Settings", path: "/settings" },
-];
-
-const OptionsIcon = [
-  <ImportContactsTwoToneIcon key="import-contacts" />,
-  <BiCategoryAlt key="category-alt" />,
-  <FaUserDoctor key="user-doctor" />,
-  <BiMessageSquareMinus key="message-square-minus" />,
-  <CiSettings key="settings" />,
+const companyOptions: Option[] = [
+  {
+    name: "Dashboard",
+    path: "/company/dashboard",
+    icon: <ImportContactsTwoToneIcon />,
+  },
+  {
+    name: "Post Jobs",
+    path: "/company/job_application",
+    icon: <BiCategoryAlt />,
+  },
+  {
+    name: "jobs",
+    path: "/company/jobs",
+    icon: <BiCategoryAlt/>
+  },
+  {
+    name: "Applications",
+    path: "/company/applications",
+    icon: <FaUserDoctor />,
+  },
+  {
+    name: "Messages",
+    path: "/company/messages/inbox",
+    icon: <BiMessageSquareMinus />,
+  },
+  {
+    name: "Settings",
+    path: "/company/settings",
+    icon: <CiSettings />,
+  },
 ];
 
 export default function CompanySidebar({ isIcon }: any) {
@@ -58,11 +76,7 @@ export default function CompanySidebar({ isIcon }: any) {
   const [open, setOpen] = useState(isLargeScreen);
 
   useEffect(() => {
-    if (isLargeScreen) {
-      setOpen(true);
-    } else {
-      setOpen(false);
-    }
+    setOpen(isLargeScreen);
   }, [isLargeScreen]);
 
   const toggleDrawer = (newOpen: boolean) => () => {
@@ -73,10 +87,10 @@ export default function CompanySidebar({ isIcon }: any) {
     const auth = getAuth();
     try {
       logout();
-      console.log("User signed out");
-      router.push("/authentication/studentLogin");
+      console.log("Company user signed out");
+      router.push("/authentication/companyLogin");
     } catch (error) {
-      console.error("Error during logout:", error);
+      console.error("Logout failed:", error);
     }
   };
 
@@ -90,31 +104,37 @@ export default function CompanySidebar({ isIcon }: any) {
       <div className="flex flex-col justify-between items-center h-full">
         <div className="px-2">
           <List>
-            {options.map((option, index) => (
+            {companyOptions.map((option) => (
               <ListItem key={option.name} disablePadding>
                 <ListItemButton
                   className="rounded-xl"
                   onClick={() => router.push(option.path)}
                 >
-                  <ListItemIcon>{OptionsIcon[index]}</ListItemIcon>
+                  <ListItemIcon>{option.icon}</ListItemIcon>
                   {!isIcon && <ListItemText primary={option.name} />}
                 </ListItemButton>
               </ListItem>
             ))}
           </List>
         </div>
-        <div className="p-2 h-full flex items-center justify-center">
+
+        <div className="p-2 flex flex-col items-center gap-3">
           <HelpCard />
+          <Button onClick={handleLogout} variant="outlined" color="error">
+            Logout
+          </Button>
         </div>
-        <Button onClick={handleLogout}>Logout</Button>
       </div>
     </Box>
   );
 
   return (
-    <div className="flex overflow-hidden">
+    <div className="flex overflow-hidden z-40">
       {!isLargeScreen && (
-        <IconButton onClick={toggleDrawer(!open)}>
+        <IconButton
+          onClick={toggleDrawer(!open)}
+          sx={{ position: "fixed", top: 15, left: 0, zIndex: 50 }}
+        >
           <MenuIcon />
         </IconButton>
       )}

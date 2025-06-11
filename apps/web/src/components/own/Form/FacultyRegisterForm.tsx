@@ -18,75 +18,66 @@ import { useEffect, useState } from "react";
 import { IoLogoApple } from "react-icons/io5";
 import { FcGoogle } from "react-icons/fc";
 
-const SignInFormCompany = () => {
+const SignUpFormCollege = () => {
   const router = useRouter();
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-  const unsubscribe = firebase.auth().onIdTokenChanged((currentUser) => {
-    //@ts-ignore
-    setUser(currentUser);
-  });
+    const unsubscribe = firebase.auth().onAuthStateChanged((currentUser) => {
+      //@ts-ignore
+      setUser(currentUser);
+    });
 
-  return () => unsubscribe();
-}, []);
+    return () => unsubscribe();
+  }, []);
 
+  const handleLoginWithGoogle = async () => {
+    try {
+      const { token, refreshToken } = await signInWithGoogle();
+      localStorage.setItem("token", token);
+      localStorage.setItem("refreshToken", refreshToken);
 
-const handleLoginWithGoogle = async () => {
-  try {
-    await firebase.auth().signOut();
-    await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);
+      const signCheckResponse = await axios.get(
+        `${BackendUrl}/api/college/is_first_signin`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log(
+        "Sign check response:",
+        signCheckResponse.data,
+        signCheckResponse.data.success,
+        signCheckResponse.data.isFirstSignIn
+      );
 
-    // Sign in with Google and get the token
-    const { token } = await signInWithGoogle();
-    localStorage.setItem("token", token);
+      if (token) {
+        console.log("ID Token:", token);
+        const response = await axios.post(
+          `${BackendUrl}/api/college/google_login`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-    // Get current logged in user directly, no listeners inside this function
-    const newUser = firebase.auth().currentUser;
-    if (!newUser) {
-      console.error("No user found after Google sign-in");
-      return;
-    }
-
-    const idToken = await newUser.getIdToken();
-    const email = newUser.email ?? "";
-
-    localStorage.setItem("company_email", email);
-
-    // Check if first sign-in
-    const signCheckResponse = await axios.get(
-      `${BackendUrl}/api/company/is_first_signin`,
-      {
-        headers: { Authorization: `Bearer ${idToken}` },
+        if (
+          signCheckResponse.data.success == true &&
+          signCheckResponse.data.isFirstSignIn
+        ) {
+          router.push("/forms/selectCollege");
+        } else if (response.data.success === true) {
+          console.log("User logged in successfully");
+          router.push("/college/dashboard");
+        }
       }
-    );
-
-    if (signCheckResponse.data.success && signCheckResponse.data.isFirstSignIn) {
-      // Redirect to application form
-      router.push("/company/application");
-      return;
+    } catch (error) {
+      console.error("Error during login:", error);
     }
-
-    // If not first sign-in, login normally
-    const response = await axios.post(
-      `${BackendUrl}/api/company/google_login`,
-      { email },
-      {
-        headers: { Authorization: `Bearer ${idToken}` },
-      }
-    );
-
-    if (response.data.success) {
-      router.push("/company/dashboard");
-    } else {
-      console.error("Google login failed:", response.data.msg);
-    }
-  } catch (error) {
-    console.error("Error during Google login:", error);
-  }
-};
-
-
+  };
 
   const {
     register,
@@ -98,13 +89,17 @@ const handleLoginWithGoogle = async () => {
 
   const onSubmit = async (data: any) => {
     try {
+        if(data.password!==data.confirmPassword){
+            alert("Passwords do not match.");
+      return;
+        }
       const res = await axios.post(
-        `${BackendUrl}/api/company/is_first_signin_with_email`,
+        `${BackendUrl}/api/college/is_first_signin_with_email`,
         data
       );
 
       // @ts-ignore
-      if (res.data.success) navigator("/company/verifyemail");
+      if (res.data.success) navigator("/college/verifyemail");
     } catch (error: any) {
       console.error("Signup error:", error.message);
     }
@@ -119,7 +114,7 @@ const handleLoginWithGoogle = async () => {
 
   return (
     <div className="max-w-md mx-auto mt-12 p-2 rounded-lg bg-transparent md:p-5 flex flex-col gap-4">
-      <h2 className="text-2xl font-bold mb-6">Company SignIn</h2>
+      <h2 className="text-2xl font-bold mb-6 text-primary">Faculty Login</h2>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="mb-4 min-w-40 md:min-w-60 lg:min-w-80">
           <input
@@ -147,6 +142,19 @@ const handleLoginWithGoogle = async () => {
             </p>
           )}
         </div>
+        <div className="mb-4 min-w-40 md:min-w-60 lg:min-w-80">
+          <input
+            type="password"
+            {...register("confirm_password")}
+            placeholder="confirm Password"
+            className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-700"
+          />
+          {errors.password && (
+            <p className="text-red-500 text-sm mt-1">
+              {getErrorMessage(errors.password)}
+            </p>
+          )}
+        </div>
         <button
           type="submit"
           className="w-full bg-primary text-white p-2 rounded hover:bg-blue-700"
@@ -165,17 +173,17 @@ const handleLoginWithGoogle = async () => {
       </div>
 
       <p>
-        Don&apos;t have an Account?
-        <Link className="text-primary px-2" href="/authentication/companySignup">
-          Sign Up
+        Already have an account?
+        <Link className="text-primary px-2" href="/authentication/facultyLogin">
+          Sign In
         </Link>
       </p>
       <p className="text-[12px]">
         <span className="text-red-500 font-bold">Note:</span> that the email you
-        are using to register Company will be the admin email.
+        are using to register college will be the admin email.
       </p>
     </div>
   );
 };
 
-export default SignInFormCompany;
+export default SignUpFormCollege;

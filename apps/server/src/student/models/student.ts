@@ -10,7 +10,7 @@ export interface IStudent extends Document {
   stud_name: string;
   stud_phone: string;
   stud_email: string;
-  stud_address: string;
+  stud_address: string; 
   stud_dob: Date;
   stud_course: string;
   stud_year: number;

@@ -1,6 +1,6 @@
 import { Schema, model, Document } from "mongoose";
 import mongoose from "mongoose";
-import { IJob } from "../../company/models/job";
+import { IJob } from "../../job/models/job";
 import { IStudent } from "./student";
 import { primarydb } from "../..";
 

@@ -22,6 +22,7 @@ const CollegeSchema = new Schema<ICollege>({
   coll_name: {
     type: String,
     required: true,
+    unique:true
   },
   coll_address: {
     type: String,
@@ -34,6 +35,7 @@ const CollegeSchema = new Schema<ICollege>({
   coll_website: {
     type: String,
     required: true,
+    unique:true
   },
   coll_location: {
     type: String,
