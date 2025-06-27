@@ -19,13 +19,13 @@ const ApplicationSchema = new Schema<IApplication>({
   },
   student: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Student", // Reference to the Student model
+    ref: "Student", 
     required: true,
   },
   //@ts-ignore
   app_job_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Job", // Reference to the Job model
+    ref: "Job", 
     required: true,
   },
   app_status: {

@@ -21,6 +21,7 @@ export interface IStudentInfo extends Document {
   stud_sem6_marksheet: string;
   stud_sem7_marksheet: string;
   stud_sem8_marksheet: string;
+  stud_aggregate: number;
   stud_prn: string;
   stud_cet: string;
   stud_jee: string;
@@ -129,6 +130,10 @@ const Student_InfoSchema = new Schema<IStudentInfo>({
   stud_sem8_marksheet: {
     type: String,
     default: null,
+  },
+  stud_aggregate: {
+    type: Number,
+    default: 0,
   },
   stud_prn: {
     type: String,
