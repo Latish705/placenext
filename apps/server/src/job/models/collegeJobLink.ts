@@ -22,7 +22,7 @@ const CollegeJobLinkSchema = new Schema<ICollegeJobLink>({
   status: {
     type: String,
     required: true,
-    enum: ["accepted", "rejected", "pending"],
+    enum: ["approved", "rejected", "pending"],
   },
 });
 

@@ -1,6 +1,9 @@
 
 "use client";
+
 import { useEffect, useState } from "react";
+import axios from "axios";
+import { BackendUrl } from "@/utils/constants";
 
 interface Job {
   _id: string;
@@ -36,31 +39,98 @@ export default function FacultyJobsPage() {
   const [filter, setFilter] = useState("all");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
+
   useEffect(() => {
     fetchJobs();
   }, []);
 
+  // Helper to get token
+  const getToken = () => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("token");
+    }
+    return null;
+  };
+
+  // Fetch all jobs (approved + pending + rejected)
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/college/companies");
-      const data = await res.json();
-      setJobs(data.jobs || data || []);
+      const token = getToken();
+      const res = await axios.get(`${BackendUrl}/api/college/jobs/all`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log("Jobs fetched all:", res.data.jobs);
+      setJobs(res.data.jobs || []);
     } catch (e) {
       setJobs([]);
     }
     setLoading(false);
   };
 
-  const handleAction = async (jobId: string, action: "accept" | "reject") => {
+  // Accept/Reject job
+  const handleAction = async (jobId: string, action: "approve" | "reject") => {
     setActionLoading(jobId + action);
     try {
-      await fetch(`/api/college/jobs/${jobId}/${action}`, { method: "POST" });
+      console.log(`Handling action: ${action} for jobId: ${jobId}`);
+      const token = getToken();
+      const res = await axios.post(
+        `${BackendUrl}/api/college/jobs/manage`,
+        { jobId, actions: action },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      console.log("Action response:", res.data);
       fetchJobs();
     } catch (e) {
       // handle error
+      console.error(`Error handling action ${action} for jobId ${jobId}:`, e);
     }
     setActionLoading(null);
+  };
+
+  // Fetch pending jobs
+  const fetchPendingJobs = async () => {
+    setLoading(true);
+    try {
+      const token = getToken();
+      const res = await axios.get(`${BackendUrl}/api/college/jobs/pending`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setJobs(res.data.jobs || []);
+    } catch (e) {
+      setJobs([]);
+    }
+    setLoading(false);
+  };
+
+  // Fetch approved jobs
+  const fetchApprovedJobs = async () => {
+    setLoading(true);
+    try {
+      const token = getToken();
+      const res = await axios.get(`${BackendUrl}/api/college/jobs/approved`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setJobs(res.data.jobs || []);
+    } catch (e) {
+      setJobs([]);
+    }
+    setLoading(false);
+  };
+
+  // Fetch job by id
+  const fetchJobById = async (jobId: string) => {
+    setLoading(true);
+    try {
+      const token = getToken();
+      const res = await axios.get(`${BackendUrl}/api/college/jobs/${jobId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setJobs(res.data.job ? [res.data.job] : []);
+    } catch (e) {
+      setJobs([]);
+    }
+    setLoading(false);
   };
 
   const filteredJobs =
@@ -112,7 +182,7 @@ export default function FacultyJobsPage() {
               <div className="flex gap-2 mt-2">
                 <button
                   disabled={job.status === "accepted" || actionLoading === job._id + "accept"}
-                  onClick={() => handleAction(job._id, "accept")}
+                  onClick={() => handleAction(job._id, "approve")}
                   className={`px-3 py-1 rounded bg-green-500 text-white disabled:bg-green-200 disabled:cursor-not-allowed`}
                 >
                   {actionLoading === job._id + "accept" ? "Accepting..." : "Accept"}

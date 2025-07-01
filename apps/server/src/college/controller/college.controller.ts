@@ -574,6 +574,8 @@ export const getCollegeJobs = async (req: Request, res: Response) => {
 //   }
 // };
 
+
+
 export const collegeAuth = async (req: Request, res: Response) => {
   try {
     // @ts-ignore
@@ -590,6 +592,7 @@ export const collegeAuth = async (req: Request, res: Response) => {
     return res.status(500).json({ msg: "Internal Server Error" });
   }
 };
+
 
 export const getCollegePendingJobs=async(req:Request,res:Response)=>{
   try {
