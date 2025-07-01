@@ -7,16 +7,17 @@ import { BackendUrl } from '@/utils/constants';
 
 interface Job {
     _id: string;
-    job_title: string;
-    job_location: string;
-    job_salary: number;
+    job_title?: string;
+    job_location?: string;
+    job_salary?: number;
     status: string;
-    job_info: {
+    job_info?: {
+        _id: string;
         job_title: string;
         job_location: string;
         job_salary: number;
     };
-    college: {
+    college?: {
         coll_name: string;
     };
 }
@@ -36,7 +37,7 @@ export default function JobsOverview() {
             setLoading(true);
             const token = localStorage.getItem('token');
             if (!token) {
-                router.push('/login'); // Redirect to login if no token
+                router.push('/authentication/companyLogin'); // Fixed redirect path
                 return;
             }
 
@@ -51,6 +52,7 @@ export default function JobsOverview() {
             );
 
             if (response.data.success) {
+                console.log('Jobs data received:', response.data.data);
                 setJobs(response.data.data);
             }
         } catch (error) {
@@ -107,19 +109,25 @@ export default function JobsOverview() {
                             <div
                                 key={job._id}
                                 className="border rounded-lg p-4 hover:shadow-lg cursor-pointer"
-                                onClick={() => router.push(`/company/jobs/${job._id}`)}
+                                onClick={() => {
+                                    console.log('Navigating to job:', job._id);
+                                    if (job.job_info) {
+                                        router.push(`/company/jobs/${job.job_info._id}`);
+                                    }
+                                }}
                             >
                                 <h2 className="text-xl font-semibold mb-2">
-                                    {job.job_info.job_title}
+                                    {job.job_info?.job_title || job.job_title || 'Untitled Job'}
                                 </h2>
+                                <p className="text-xs text-gray-400 mb-1">ID: {job._id}</p>
                                 <p className="text-gray-600 mb-2">
-                                    {job.job_info.job_location}
+                                    {job.job_info?.job_location || job.job_location || 'No location'}
                                 </p>
                                 <p className="text-gray-800">
-                                    ₹{job.job_info.job_salary.toLocaleString()}/year
+                                    ₹{(job.job_info?.job_salary || job.job_salary || 0).toLocaleString()}/year
                                 </p>
                                 <p className="text-gray-600 mb-2">
-                                    College: {job.college.coll_name}
+                                    College: {job.college?.coll_name || 'No college'}
                                 </p>
                                 <div className={`mt-2 inline-block px-2 py-1 rounded text-sm ${
                                     job.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :

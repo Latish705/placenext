@@ -109,53 +109,77 @@ function Textarea({
 
 const styles = {
   container: {
-    maxWidth: "700px",
-    margin: "40px auto",
+    maxWidth: "900px",
+    margin: "20px auto",
     padding: "30px",
-    border: "1px solid #ddd",
-    borderRadius: "10px",
-    background: "#f9f9f9",
+    border: "1px solid #e0e0e0",
+    borderRadius: "12px",
+    background: "#ffffff",
     fontFamily: "Arial, sans-serif",
+    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
   },
   title: {
     textAlign: "center" as const,
-    marginBottom: "25px",
+    marginBottom: "30px",
     color: "#333",
+    fontSize: "28px",
+    fontWeight: "600",
   },
   form: {
     display: "flex" as const,
     flexDirection: "column" as const,
-    gap: "15px",
+    gap: "20px",
   },
   inputGroup: {
     display: "flex" as const,
     flexDirection: "column" as const,
   },
   label: {
-    marginBottom: "5px",
-    fontWeight: "bold",
+    marginBottom: "8px",
+    fontWeight: "600",
+    color: "#374151",
+    fontSize: "14px",
   },
   input: {
-    padding: "10px",
-    border: "1px solid #ccc",
-    borderRadius: "5px",
+    padding: "12px",
+    border: "1px solid #d1d5db",
+    borderRadius: "8px",
     fontSize: "16px",
+    transition: "border-color 0.2s, box-shadow 0.2s",
+    "&:focus": {
+      outline: "none",
+      borderColor: "#3b82f6",
+      boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
+    },
   },
   textarea: {
-    minHeight: "80px",
-    padding: "10px",
+    minHeight: "100px",
+    padding: "12px",
     fontSize: "16px",
-    border: "1px solid #ccc",
-    borderRadius: "5px",
+    border: "1px solid #d1d5db",
+    borderRadius: "8px",
+    resize: "vertical" as const,
+    transition: "border-color 0.2s, box-shadow 0.2s",
   },
   button: {
-    padding: "12px 20px",
-    backgroundColor: "#007bff",
+    padding: "14px 28px",
+    backgroundColor: "#3b82f6",
     color: "#fff",
     border: "none",
     fontSize: "16px",
-    borderRadius: "5px",
+    fontWeight: "600",
+    borderRadius: "8px",
     cursor: "pointer",
+    transition: "background-color 0.2s, transform 0.1s",
+    "&:hover": {
+      backgroundColor: "#2563eb",
+      transform: "translateY(-1px)",
+    },
+    "&:disabled": {
+      backgroundColor: "#9ca3af",
+      cursor: "not-allowed",
+      transform: "none",
+    },
   },
 };
 
@@ -394,197 +418,240 @@ export default function JobCreationForm() {
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.title}>Post a Job</h2>
+      <h2 style={styles.title}>Post a New Job</h2>
       <form style={styles.form} onSubmit={handleSubmit}>
-        <Input
-          label="Job Title"
-          name="job_title"
-          value={formData.job_title}
-          onChange={handleChange}
-        />
-        <Select
-          label="Job Type"
-          name="job_type"
-          value={formData.job_type}
-          options={jobTypes}
-          onChange={handleChange}
-        />
-        <Input
-          label="Location"
-          name="job_location"
-          value={formData.job_location}
-          onChange={handleChange}
-        />
-        <Input
-          label="Salary (USD)"
-          type="number"
-          name="job_salary"
-          value={formData.job_salary}
-          onChange={handleChange}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input
+            label="Job Title"
+            name="job_title"
+            value={formData.job_title}
+            onChange={handleChange}
+          />
+          <Select
+            label="Job Type"
+            name="job_type"
+            value={formData.job_type}
+            options={jobTypes}
+            onChange={handleChange}
+          />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input
+            label="Location"
+            name="job_location"
+            value={formData.job_location}
+            onChange={handleChange}
+          />
+          <Input
+            label="Salary (₹)"
+            type="number"
+            name="job_salary"
+            value={formData.job_salary}
+            onChange={handleChange}
+          />
+        </div>
+
         <Textarea
           label="Job Description"
           name="job_description"
           value={formData.job_description}
           onChange={handleChange}
         />
+        
         <Textarea
           label="Job Requirements (comma-separated)"
           name="job_requirements"
           value={formData.job_requirements}
           onChange={handleChange}
         />
-        <Input
-          label="Posted Date"
-          type="date"
-          name="job_posted_date"
-          value={formData.job_posted_date}
-          onChange={handleChange}
-        />
-        <Input
-          label="Years of Experience Required"
-          type="number"
-          name="yr_of_exp_req"
-          value={formData.yr_of_exp_req}
-          onChange={handleChange}
-        />
-        <Select
-          label="Job Timing"
-          name="job_timing"
-          value={formData.job_timing}
-          options={jobTimings}
-          onChange={handleChange}
-        />
-        <Input
-          label="Max No. of Live KTs"
-          type="number"
-          name="max_no_live_kt"
-          value={formData.max_no_live_kt}
-          onChange={handleChange}
-        />
-        <Input
-          label="Max No. of Dead KTs"
-          type="number"
-          name="max_no_dead_kt"
-          value={formData.max_no_dead_kt}
-          onChange={handleChange}
-        />
-        <Input
-          label="Minimum CGPI"
-          type="number"
-          name="min_CGPI"
-          value={formData.min_CGPI}
-          onChange={handleChange}
-        />
-        <Input
-          label="Allowed Branches (comma-separated)"
-          name="branch_allowed"
-          value={formData.branch_allowed}
-          onChange={handleChange}
-        />
-        <Input
-          label="Passing Years (comma-separated)"
-          name="passing_year"
-          value={formData.passing_year}
-          onChange={handleChange}
-        />
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input
+            label="Posted Date"
+            type="date"
+            name="job_posted_date"
+            value={formData.job_posted_date}
+            onChange={handleChange}
+          />
+          <Input
+            label="Years of Experience Required"
+            type="number"
+            name="yr_of_exp_req"
+            value={formData.yr_of_exp_req}
+            onChange={handleChange}
+          />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Select
+            label="Job Timing"
+            name="job_timing"
+            value={formData.job_timing}
+            options={jobTimings}
+            onChange={handleChange}
+          />
+          <Input
+            label="Minimum CGPI"
+            type="number"
+            name="min_CGPI"
+            value={formData.min_CGPI}
+            onChange={handleChange}
+          />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input
+            label="Max No. of Live KTs"
+            type="number"
+            name="max_no_live_kt"
+            value={formData.max_no_live_kt}
+            onChange={handleChange}
+          />
+          <Input
+            label="Max No. of Dead KTs"
+            type="number"
+            name="max_no_dead_kt"
+            value={formData.max_no_dead_kt}
+            onChange={handleChange}
+          />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input
+            label="Allowed Branches (comma-separated)"
+            name="branch_allowed"
+            value={formData.branch_allowed}
+            onChange={handleChange}
+          />
+          <Input
+            label="Passing Years (comma-separated)"
+            name="passing_year"
+            value={formData.passing_year}
+            onChange={handleChange}
+          />
+        </div>
 
         {/* College selection */}
         <div style={styles.inputGroup}>
-          <label style={styles.label}>Select College</label>
-          <select
-            style={styles.input}
-            value={selectedCollegeId}
-            onChange={(e) => setSelectedCollegeId(e.target.value)}
-          >
-            <option value="">Select a college</option>
-            {colleges.map((c) => (
-              <option key={c._id} value={c._id}>
-                {c.coll_name}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            onClick={handleAddCollege}
-            style={{ marginTop: "10px" }}
-            disabled={!selectedCollegeId}
-          >
-            Add College
-          </button>
+          <label style={styles.label}>Select Colleges</label>
+          <div className="flex gap-2">
+            <select
+              style={{ ...styles.input, flex: 1 }}
+              value={selectedCollegeId}
+              onChange={(e) => setSelectedCollegeId(e.target.value)}
+            >
+              <option value="">Select a college</option>
+              {colleges.map((c) => (
+                <option key={c._id} value={c._id}>
+                  {c.coll_name}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={handleAddCollege}
+              style={{
+                ...styles.button,
+                width: 'auto',
+                padding: '10px 20px',
+                backgroundColor: selectedCollegeId ? '#28a745' : '#6c757d'
+              }}
+              disabled={!selectedCollegeId}
+            >
+              Add College
+            </button>
+          </div>
         </div>
 
         {selectedColleges.length > 0 && (
-          <div>
-            <strong>Selected Colleges:</strong>
-            <ul>
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Selected Colleges:</label>
+            <div className="flex flex-wrap gap-2">
               {selectedColleges.map((id) => {
                 const college = colleges.find((c) => c._id === id);
                 return (
-                  <li key={id}>
-                    {college?.coll_name || id}
+                  <div
+                    key={id}
+                    className="flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                  >
+                    <span>{college?.coll_name || id}</span>
                     <button
                       type="button"
                       onClick={() => handleRemoveCollege(id)}
-                      style={{ marginLeft: "10px", color: "red" }}
+                      className="ml-2 text-blue-600 hover:text-blue-800"
                     >
-                      Remove
+                      ×
                     </button>
-                  </li>
+                  </div>
                 );
               })}
-            </ul>
+            </div>
           </div>
         )}
 
         {/* Interview Rounds */}
         <div style={styles.inputGroup}>
-          <label style={styles.label}>Add Interview Round</label>
-          <input
-            style={styles.input}
-            placeholder="Round Title"
-            value={roundTitle}
-            onChange={(e) => setRoundTitle(e.target.value)}
-          />
-          <button
-            type="button"
-            onClick={handleAddRound}
-            style={{ marginTop: "10px" }}
-            disabled={!roundTitle}
-          >
-            {editIndex !== null ? "Update Round" : "Add Round"}
-          </button>
+          <label style={styles.label}>Interview Rounds</label>
+          <div className="flex gap-2">
+            <input
+              style={{ ...styles.input, flex: 1 }}
+              placeholder="Round Title (e.g., Technical Interview, HR Round)"
+              value={roundTitle}
+              onChange={(e) => setRoundTitle(e.target.value)}
+            />
+            <button
+              type="button"
+              onClick={handleAddRound}
+              style={{
+                ...styles.button,
+                width: 'auto',
+                padding: '10px 20px',
+                backgroundColor: roundTitle ? '#007bff' : '#6c757d'
+              }}
+              disabled={!roundTitle}
+            >
+              {editIndex !== null ? "Update Round" : "Add Round"}
+            </button>
+          </div>
         </div>
 
         {rounds.length > 0 && (
-          <div>
-            <strong>Rounds:</strong>
-            <ul>
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Added Rounds:</label>
+            <div className="space-y-2">
               {rounds.map((round, idx) => (
-                <li key={idx}>
-                  <b>Round {idx + 1}</b>: {round.title}{" "}
-                  <button
-                    type="button"
-                    onClick={() => handleEditRound(idx)}
-                    style={{ marginLeft: "10px", color: "orange" }}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteRound(idx)}
-                    style={{ marginLeft: "10px", color: "red" }}
-                  >
-                    Delete
-                  </button>
-                </li>
+                <div
+                  key={idx}
+                  className="flex items-center justify-between bg-gray-50 p-3 rounded border"
+                >
+                  <div>
+                    <span className="font-medium">Round {idx + 1}:</span> {round.title}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleEditRound(idx)}
+                      className="text-blue-600 hover:text-blue-800 px-2 py-1 text-sm"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteRound(idx)}
+                      className="text-red-600 hover:text-red-800 px-2 py-1 text-sm"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         )}
 
         <button type="submit" style={styles.button}>
-          Submit Job
+          Submit Job Application
         </button>
       </form>
     </div>
