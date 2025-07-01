@@ -3,7 +3,7 @@ import {
   acceptStudent,
   applicationFrom,
   collegeAuth,
-  createJobByCollege,
+  // createJobByCollege,
   facultyProfile,
   getAllColleges,
   getAllStudentList,
@@ -64,7 +64,7 @@ collegeRoutes.get(
 // collegeRoutes.get("/get_jobs", authenticateToken, getCollegeJobs);
 collegeRoutes.get("/get_job/:id", authenticateToken);
 
-collegeRoutes.post("/create_job", authenticateToken, createJobByCollege);
+// collegeRoutes.post("/create_job", authenticateToken, createJobByCollege);
 
 collegeRoutes.get("/companies", authenticateToken, getCollegeJobs);
 collegeRoutes.get("/company/:id", authenticateToken, getJobDetailsById);
@@ -102,7 +102,7 @@ collegeRoutes.get(
   authenticateToken,
   getDepartmentStatistics
 );
-collegeRoutes.get('/getAllColleges',getAllColleges);
+collegeRoutes.get('/getAllColleges', getAllColleges);
 
 
 

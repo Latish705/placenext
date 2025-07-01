@@ -430,6 +430,9 @@ export const rejectStudent = async (req: Request, res: Response) => {
   }
 };
 
+
+
+//************************** */
 export const getStudentStatistics = async (req: Request, res: Response) => {
   try {
     // @ts-ignore
@@ -555,110 +558,12 @@ export const getCollegeJobs = async (req: Request, res: Response) => {
   }
 };
 
-export const createJobByCollege = async (req: Request, res: Response) => {
-  try {
-    // @ts-ignore
-    const LogincollegeUser = req.user;
-    const {
-      job_title,
-      job_type,
-      job_location,
-      job_salary,
-      job_description,
-      job_requirements,
-      job_posted_date,
-      yr_of_exp_req,
-      job_timing,
-      status,
-      min_CGPI,
-      max_no_dead_kt,
-      max_no_live_kt,
-      branch_allowed,
-      passing_year,
-      company_name,
-    } = req.body;
 
-    console.log(req.body); // Debugging output
-
-    // Check for required fields
-    if (
-      [
-        job_title,
-        job_type,
-        job_location,
-        job_salary,
-        job_description,
-        job_requirements,
-        job_posted_date,
-        yr_of_exp_req,
-        job_timing,
-        status,
-        company_name,
-        min_CGPI,
-        max_no_dead_kt,
-        max_no_live_kt,
-        branch_allowed,
-        passing_year,
-      ].some((field) => field === "" || field === undefined) // Check for empty or undefined fields
-    ) {
-      return res.status(400).json({ msg: "All fields are required" });
-    }
-
-    // Check for existing job
-    const existingJob = await Job.findOne({ job_title, job_location });
-
-    if (existingJob) {
-      return res.status(400).json({ msg: "Job already exists" });
-    }
-
-    // Find the college based on the logged-in user
-    const faculty = await Faculty.findOne({
-      googleId: LogincollegeUser.uid,
-    });
-
-    if (!faculty) {
-      return res.status(400).json({ msg: "Faculty not found" });
-    }
-    const redisKey = `jobs:college:${faculty.faculty_college_id}`;
-
-    // Create new job
-    const newJob = new Job({
-      job_title,
-      job_type,
-      job_location,
-      company_name,
-      job_salary,
-      job_description,
-      job_requirements,
-      job_posted_date,
-      yr_of_exp_req,
-      min_CGPI,
-      max_no_dead_kt,
-      max_no_live_kt,
-      branch_allowed,
-      passing_year,
-      job_timing,
-      status,
-      college: faculty.faculty_college_id, // Link to college
-    });
-
-    await newJob.save();
-
-    // if we job is created and someone is using cached for that updating the cached
-    const jobs = await Job.find();
-    await redis.set(redisKey, jobs, { EX: 600 });
-    await redis.expire(redisKey, 600);
-    return res.status(200).json({ success: true, msg: "Job created" });
-  } catch (error: any) {
-    console.log("Error in createJobByCollege", error.message);
-    return res.status(500).json({ msg: "Internal Server Error" });
-  }
-};
 
 // export const getCollegeJobById = async (req: Request, res: Response) => {
 //   try {
 //     const { id } = req.params;
-//     const job = await Job.findById(id);
+//     const job = await collegeJoblink.findById(id);
 //     if (!job) {
 //       return res.status(404).json({ success: false, msg: "Job not found" });
 //     }

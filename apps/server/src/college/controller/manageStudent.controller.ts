@@ -317,22 +317,24 @@ export const totalNoOfOffers = async (req: Request, res: Response) => {
   try {
     // @ts-ignore
     const user = req.user;
+    console.log("API triggered by user:", user.uid);
 
     const faculty = await Faculty.findOne({ googleId: user.uid }).select("faculty_college_id");
-
+    console.log("Faculty fetched:", faculty);
     if (!faculty?.faculty_college_id) {
       return res.status(404).json({ success: false, msg: "Faculty's college ID not found" });
     }
 
     const collegeId = faculty.faculty_college_id;
-
+    console.log("College ID:", collegeId);
     // Step 1: Get all student IDs from the same college
-    const students = await Student.find({ collegeId }).select("_id");
+    const students = await Student.find({ stud_college_id: collegeId }).select("_id");
     const studentIds = students.map((s: IStudent) => s._id);
+    console.log("Student IDs:", studentIds);
 
     // Step 2: Count offers linked to those students
     const totalOffers = await Offer.countDocuments({ studentId: { $in: studentIds } });
-
+    console.log("Total offers found:", totalOffers);
     res.status(200).json({
       success: true,
       totalOffers,
@@ -353,26 +355,28 @@ export const studentsAcceptedUnder6LPA = async (req: Request, res: Response) => 
   try {
     // @ts-ignore
     const user = req.user;
+    console.log("API triggered by user:", user.uid);  
 
     const faculty = await Faculty.findOne({ googleId: user.uid }).select("faculty_college_id");
-
+    console.log("Faculty fetched:", faculty);
     if (!faculty?.faculty_college_id) {
       return res.status(404).json({ success: false, msg: "Faculty's college ID not found" });
     }
 
     const collegeId = faculty.faculty_college_id;
-
+    console.log("College ID:", collegeId);
     // Get students in the same college
-    const students = await Student.find({ collegeId }).select("_id");
+    const students = await Student.find({ stud_college_id: collegeId }).select("_id");
 
 
     const studentIds: string[] = students.map((s: IStudent) => s._id);
-
+    console.log("Student IDs:", studentIds);
     const count = await Offer.countDocuments({
       studentId: { $in: studentIds },
       status: 'accepted',
       package: { $lt: 600000 }
     });
+    console.log("Count of students who accepted offers < 6 LPA:", count);
 
     res.status(200).json({
       success: true,
@@ -393,16 +397,17 @@ export const studentsAcceptedSecondOfferOver6LPA = async (req: Request, res: Res
   try {
     // @ts-ignore
     const user = req.user;
+    console.log("API triggered by user:", user.uid);
 
     const faculty = await Faculty.findOne({ googleId: user.uid }).select("faculty_college_id");
-
+    console.log("Faculty fetched:", faculty);
     if (!faculty?.faculty_college_id) {
       return res.status(404).json({ success: false, msg: "Faculty's college ID not found" });
     }
 
     const collegeId = faculty.faculty_college_id;
 
-    const students = await Student.find({ collegeId }).select("_id");
+    const students = await Student.find({ stud_college_id: collegeId }).select("_id");
     const studentIds = students.map((s: IStudent) => s._id);
 
     const count = await Offer.countDocuments({
@@ -411,6 +416,7 @@ export const studentsAcceptedSecondOfferOver6LPA = async (req: Request, res: Res
       package: { $gte: 600000 },
       offerNumber: 2
     });
+    console.log("Count of students who accepted 2nd offer ≥ 6 LPA:", count);
 
     res.status(200).json({
       success: true,
@@ -432,18 +438,19 @@ export const getOffersAbove6LPA = async (req: Request, res: Response) => {
   try {
     // @ts-ignore
     const user = req.user;
+    console.log("API triggered by user:", user.uid);
 
     const faculty = await Faculty.findOne({ googleId: user.uid }).select("faculty_college_id");
-
+    console.log("Faculty fetched:", faculty);
     if (!faculty?.faculty_college_id) {
       return res.status(404).json({ success: false, msg: "Faculty's college ID not found" });
     }
 
     const collegeId = faculty.faculty_college_id;
-
-    const students = await Student.find({ collegeId }).select("_id");
+    console.log("College ID:", collegeId);
+    const students = await Student.find({ stud_college_id: collegeId }).select("_id");
     const studentIds = students.map((s: IStudent) => s._id);
-
+    console.log("Student IDs:", studentIds);
     // Step 2: Fetch all offers >= 6 LPA
     const offers = await Offer.find({
       studentId: { $in: studentIds },
@@ -468,15 +475,15 @@ export const getOffersBelow6LPA = async (req: Request, res: Response) => {
   try {
     // @ts-ignore
     const user = req.user;
-
+    console.log("API triggered by user from getOffersBelow6LPA:", user.uid);
     const faculty = await Faculty.findOne({ googleId: user.uid }).select("faculty_college_id");
-
+    console.log("Faculty fetched:", faculty);
     if (!faculty?.faculty_college_id) {
       return res.status(404).json({ success: false, msg: "Faculty's college ID not found" });
     }
 
     const collegeId = faculty.faculty_college_id;
-
+    console.log("College ID:", collegeId);
     // Step 1: Get all students from this college
     const students = await Student.find({ collegeId }).select("_id");
     const studentIds = students.map((s: IStudent) => s._id);
@@ -486,7 +493,7 @@ export const getOffersBelow6LPA = async (req: Request, res: Response) => {
       studentId: { $in: studentIds },
       package: { $lt: 600000 }
     }).populate('studentId jobId');
-
+    console.log("Offers fetched:", offers.length);
     res.status(200).json({
       success: true,
       offers,

@@ -1,4 +1,5 @@
 import { Schema, model, Types, Document } from 'mongoose';
+import { primarydb } from '../..';
 
 export interface IOffer extends Document {
   package: number;
@@ -27,5 +28,5 @@ const OfferSchema = new Schema<IOffer>({
   timestamps: true
 });
 
-const Offer = model<IOffer>('Offer', OfferSchema);
+const Offer = primarydb.model('Offer', OfferSchema);
 export default Offer;
