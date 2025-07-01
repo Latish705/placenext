@@ -38,11 +38,15 @@ const drawerVariants = {
   visible: { x: 0 },
 };
 
+import { MdBarChart } from "react-icons/md";
+import { MdWorkOutline } from "react-icons/md";
+
 const options: Option[] = [
   { name: "Dashboard", path: "/college/dashboard" },
   { name: "Students", path: "/college/student_list" },
   { name: "Faculty", path: "/college/faculty_list" },
-  { name: "Job Postings", path: "/college/jobs" },
+  { name: "Jobs", path: "/college/jobs" },
+  { name: "Statistics", path: "/college/statistics" },
   { name: "Messages", path: "/college/messages/inbox" },
   { name: "Profile", path: "/college/profile" },
   { name: "Settings", path: "/college/settings" },
@@ -52,6 +56,8 @@ const OptionsIcon = [
   <ImportContactsTwoToneIcon key="import-contacts" />,
   <BiCategoryAlt key="category-alt" />,
   <FaUserDoctor key="user-doctor" />,
+  <MdWorkOutline key="work-outline" />,
+  <MdBarChart key="bar-chart" />,
   <BiMessageSquareMinus key="message-square-minus" />,
   <CiSettings key="settings" />,
 ];

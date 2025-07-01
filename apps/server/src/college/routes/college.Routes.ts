@@ -3,7 +3,7 @@ import {
   acceptStudent,
   applicationFrom,
   collegeAuth,
-  createJobByCollege,
+  // createJobByCollege,
   facultyProfile,
   getAllColleges,
   getAllStudentList,
@@ -23,6 +23,18 @@ import {
 } from "../controller/college.controller";
 import { authenticateToken } from "../../middlewares/verifyGoogleToken";
 import { create_faculty } from "../controller/faculty.controller";
+
+import {
+  getDepartmentWiseEligibleStudents,
+  getDepartmentWisePlacementStatus,
+  markAsPlaced,
+  totalNoOfOffers,
+  studentsAcceptedUnder6LPA,
+  studentsAcceptedSecondOfferOver6LPA,
+  getOffersAbove6LPA,
+  getOffersBelow6LPA
+} from "../controller/manageStudent.controller";
+
 
 const collegeRoutes = Router();
 
@@ -52,7 +64,7 @@ collegeRoutes.get(
 // collegeRoutes.get("/get_jobs", authenticateToken, getCollegeJobs);
 collegeRoutes.get("/get_job/:id", authenticateToken);
 
-collegeRoutes.post("/create_job", authenticateToken, createJobByCollege);
+// collegeRoutes.post("/create_job", authenticateToken, createJobByCollege);
 
 collegeRoutes.get("/companies", authenticateToken, getCollegeJobs);
 collegeRoutes.get("/company/:id", authenticateToken, getJobDetailsById);
@@ -90,6 +102,17 @@ collegeRoutes.get(
   authenticateToken,
   getDepartmentStatistics
 );
-collegeRoutes.get('/getAllColleges',getAllColleges);
+collegeRoutes.get('/getAllColleges', getAllColleges);
+
+
+
+collegeRoutes.get("/eligible_students", authenticateToken, getDepartmentWiseEligibleStudents);
+collegeRoutes.get("/placement_status", authenticateToken, getDepartmentWisePlacementStatus);
+collegeRoutes.post("/mark_as_placed", authenticateToken, markAsPlaced);
+collegeRoutes.get("/total_offers", authenticateToken, totalNoOfOffers);
+collegeRoutes.get("/students_accepted_under_6lpa", authenticateToken, studentsAcceptedUnder6LPA);
+collegeRoutes.get("/students_accepted_second_offer_above_6lpa", authenticateToken, studentsAcceptedSecondOfferOver6LPA);
+collegeRoutes.get("/offers_above_6lpa", authenticateToken, getOffersAbove6LPA);
+collegeRoutes.get("/offers_below_6lpa", authenticateToken, getOffersBelow6LPA);
 
 export default collegeRoutes;

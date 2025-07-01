@@ -104,10 +104,11 @@ for (const c of college) {
 
       if (collegesToLink.length === 0) {
         console.log("clg: All colleges are already linked.");
-        return res.status(409).json({
+        res.status(409).json({
           success: false,
           message: "Job already exists and is linked to all selected colleges.",
         });
+        return;
       }
 
       for (const collegeId of collegesToLink) {
