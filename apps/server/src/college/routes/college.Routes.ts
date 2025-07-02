@@ -24,6 +24,16 @@ import {
 import { authenticateToken } from "../../middlewares/verifyGoogleToken";
 import { create_faculty } from "../controller/faculty.controller";
 
+  // getDepartmentWiseEligibleStudents,
+//   getDepartmentWisePlacementStatus,
+//   markAsPlaced,
+//   totalNoOfOffers,
+//   studentsAcceptedUnder6LPA,
+//   studentsAcceptedSecondOfferOver6LPA,
+//   getOffersAbove6LPA,
+//   getOffersBelow6LPA
+// } from "../controller/manageStudent.controller";
+
 import {
   getDepartmentWiseEligibleStudents,
   getDepartmentWisePlacementStatus,
@@ -35,8 +45,23 @@ import {
   getOffersBelow6LPA
 } from "../controller/manageStudent.controller";
 
+import {
+  getPendingJobs,
+  getApprovedJobs,
+  manageJob,
+  getAllJobs,
+  getJobById
+} from "../controller/jobs.controller";
+// Job management routes for faculty/admin
+
+
 
 const collegeRoutes = Router();
+collegeRoutes.get("/jobs/pending", authenticateToken, getPendingJobs);
+collegeRoutes.get("/jobs/approved", authenticateToken, getApprovedJobs);
+collegeRoutes.post("/jobs/manage", authenticateToken, manageJob);
+collegeRoutes.get("/jobs/all", authenticateToken, getAllJobs);
+collegeRoutes.get("/jobs/:id", authenticateToken, getJobById);
 
 collegeRoutes.get("/is_first_signin", authenticateToken, isFirstSignIn);
 
@@ -62,7 +87,7 @@ collegeRoutes.get(
 // college job routes
 
 // collegeRoutes.get("/get_jobs", authenticateToken, getCollegeJobs);
-collegeRoutes.get("/get_job/:id", authenticateToken);
+// collegeRoutes.get("/get_job/:id", authenticateToken);
 
 // collegeRoutes.post("/create_job", authenticateToken, createJobByCollege);
 
@@ -102,7 +127,7 @@ collegeRoutes.get(
   authenticateToken,
   getDepartmentStatistics
 );
-collegeRoutes.get('/getAllColleges', getAllColleges);
+// collegeRoutes.get('/getAllColleges', getAllColleges);
 
 
 

@@ -101,27 +101,35 @@ export const getAllJobs = async (req: Request, res: Response) => {
 export const manageJob = async (req: Request, res: Response) => {
     try{
         const {jobId, actions} = req.body;
+        console.log("Job ID:", jobId);
+        console.log("Action:", actions);    
         if (!jobId) {
             return res.status(400).json({ msg: "Job ID is required" });
         }
         //@ts-ignore
+        console.log("Request Body:", req.user);
+        //@ts-ignore
         const userId = req.user.uid || req.faculty; // Assuming the user object has a uid field
+        console.log("User ID:", userId);
         // @ts-ignore
-        const role = req.role // Assuming the user object has a googleId field
+        // const role = req.role // Assuming the user object has a googleId field
         if (!userId ) {
+            console.log("User ID is not provided");
             return res.status(403).json({ msg: "Unauthorized" });
         }
         const user = await Faculty.findOne({ googleId: userId });
+        // console.log("User found:", user);
+        console.log("User:", user);
         if (!user) {
             return res.status(404).json({ msg: "User not found" });
         }
         const collegeId = user.faculty_college_id;
         // Check if the user is authorized to manage jobs
-        if (user.role !== "tpo" || user.role !== "admin") {
+        if (user.role !== "college-tpo" && user.role !== "admin") {
             // User is authorized to manage jobs     
             return res.status(403).json({ msg: "Unauthorized to manage jobs" });
         }
-        const job = await CollegeJobLink.findById({ jobId, college: collegeId });
+        const job = await CollegeJobLink.findById(jobId);
         if (!job) {
             return res.status(404).json({ msg: "Job not found" });
         }
@@ -130,9 +138,6 @@ export const manageJob = async (req: Request, res: Response) => {
             job.status = "approved";
         } else if (actions === "reject") {
             job.status = "rejected";
-        } else if (actions === "delete") {
-            await CollegeJobLink.findByIdAndDelete(jobId);
-            return res.status(200).json({ msg: "Job deleted successfully" });
         } else {
             return res.status(400).json({ msg: "Invalid action" });
         }
