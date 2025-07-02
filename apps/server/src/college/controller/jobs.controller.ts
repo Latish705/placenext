@@ -6,6 +6,7 @@ import Job from "../../job/models/job";
 import Faculty from "../models/faculty";
 import College from "../models/college";
 import CollegeJobLink from "../../job/models/collegeJobLink";
+import Offer from "../../student/models/offers";
 // import { getFacultyDetails } from "../../faculty/controller/faculty.controller"; 
 
 
@@ -79,7 +80,20 @@ export const getAllJobs = async (req: Request, res: Response) => {
             return res.status(404).json({ msg: "User not found" });
         }
 
-        const jobs = await CollegeJobLink.find({college:user.faculty_college_id});
+        const jobs = await CollegeJobLink.find({
+            college: user.faculty_college_id
+          }).populate({
+            path: 'job_info',
+            populate: {
+              path: 'company_name',  // nested field inside job_info
+              model: 'Company'       // optional if Mongoose can infer
+            }
+          });
+        
+        
+        
+        console.log("Jobs fetched:", jobs);
+        
         if (!jobs || jobs.length === 0) {
             return res.status(404).json({ msg: "No jobs found" });
         }

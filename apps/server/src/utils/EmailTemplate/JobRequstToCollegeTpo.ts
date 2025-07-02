@@ -5,7 +5,7 @@ export const verifyEmailTemplate = (
 ) => {
   return {
     from: {
-      name: "PlaceNext Platform",
+      name: "Laxmi Crate Industries",
       address: process.env.EMAIL!,
     },
     to: email,
@@ -75,20 +75,20 @@ export const verifyEmailTemplate = (
         </div>
         <div class="content">
           <p>Hi ${name},</p>
-          <p>Thank you for signing up with PlaceNext. Please verify your email address by clicking the button below:</p>
+          <p>Thank you for signing up with Laxmi Crate Industries. Please verify your email address by clicking the button below:</p>
           <a href="${
-            process.env.FRONTEND_BASE_URL || process.env.BACKEND_BASE_URL
-          }/verify-email/${resetToken}" class="button" style="background-color: #56b280; color: #ffffff; padding: 12px 25px; border-radius: 5px; text-decoration: none; font-weight: bold;">Verify Email</a>
+            process.env.BACKEND_BASE_URL
+          }/api/customers/verify-email/${resetToken}" class="button" style="background-color: #56b280; color: #ffffff; padding: 12px 25px; border-radius: 5px; text-decoration: none; font-weight: bold;">Verify Email</a>
           <p>If the button above does not work, copy and paste the following URL into your browser:</p>
           <p><a href="${
-            process.env.FRONTEND_BASE_URL || process.env.BACKEND_BASE_URL
-          }/verify-email/${resetToken}" style="color: #56b280;">${
-            process.env.FRONTEND_BASE_URL || process.env.BACKEND_BASE_URL
-          }/verify-email/${resetToken}</a></p>
+            process.env.BACKEND_BASE_URL
+          }/api/customers/verify-email/${resetToken}" style="color: #56b280;">${
+            process.env.BACKEND_BASE_URL
+          }/api/customers/verify-email/${resetToken}</a></p>
           <p>If you did not request this verification, please ignore this email.</p>
         </div>
         <div class="footer">
-          <p>&copy; ${new Date().getFullYear()} PlaceNext Platform. All rights reserved.</p>
+          <p>&copy; ${new Date().getFullYear()} Laxmi Crate Industries. All rights reserved.</p>
         </div>
       </div>
     </body>

@@ -1,15 +1,27 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { BackendUrl } from "@/utils/constants";
+import { useRouter } from 'next/navigation';
+
+interface Company {
+  _id: string;
+  comp_name: string;
+  [key: string]: any;
+}
+
+interface JobInfo {
+  _id: string;
+  job_title: string;
+  company_name: Company;
+  job_salary: number;
+  [key: string]: any;
+}
 
 interface Job {
   _id: string;
-  title: string;
-  company: string;
-  salary: string;
+  job_info: JobInfo;
   status: string;
   [key: string]: any;
 }
@@ -38,7 +50,7 @@ export default function FacultyJobsPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-
+  const router = useRouter();
 
   useEffect(() => {
     fetchJobs();
@@ -88,51 +100,6 @@ export default function FacultyJobsPage() {
     setActionLoading(null);
   };
 
-  // Fetch pending jobs
-  const fetchPendingJobs = async () => {
-    setLoading(true);
-    try {
-      const token = getToken();
-      const res = await axios.get(`${BackendUrl}/api/college/jobs/pending`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setJobs(res.data.jobs || []);
-    } catch (e) {
-      setJobs([]);
-    }
-    setLoading(false);
-  };
-
-  // Fetch approved jobs
-  const fetchApprovedJobs = async () => {
-    setLoading(true);
-    try {
-      const token = getToken();
-      const res = await axios.get(`${BackendUrl}/api/college/jobs/approved`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setJobs(res.data.jobs || []);
-    } catch (e) {
-      setJobs([]);
-    }
-    setLoading(false);
-  };
-
-  // Fetch job by id
-  const fetchJobById = async (jobId: string) => {
-    setLoading(true);
-    try {
-      const token = getToken();
-      const res = await axios.get(`${BackendUrl}/api/college/jobs/${jobId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setJobs(res.data.job ? [res.data.job] : []);
-    } catch (e) {
-      setJobs([]);
-    }
-    setLoading(false);
-  };
-
   const filteredJobs =
     filter === "all"
       ? jobs
@@ -163,12 +130,14 @@ export default function FacultyJobsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredJobs.map((job) => (
+            
+          <button onClick={()=>{router.push(`/college/jobs/${job.job_info._id}`)}}>
             <div
               key={job._id}
               className="bg-white rounded-lg shadow p-6 flex flex-col gap-2"
             >
               <div className="flex justify-between items-center mb-2">
-                <h2 className="text-lg font-semibold">{job.title}</h2>
+                <h2 className="text-lg font-semibold">{job.job_info.job_title}</h2>
                 <span
                   className={`px-2 py-1 rounded text-xs font-semibold ${
                     statusColors[job.status] || "bg-gray-100 text-gray-700"
@@ -177,15 +146,15 @@ export default function FacultyJobsPage() {
                   {statusLabels[job.status] || job.status}
                 </span>
               </div>
-              <div className="text-gray-600">Company: {job.company}</div>
-              <div className="text-gray-600">Salary: {job.salary}</div>
+              <div className="text-gray-600">Company: {job.job_info.company_name.comp_name}</div>
+              <div className="text-gray-600">Salary: {job.job_info.job_salary}</div>
               <div className="flex gap-2 mt-2">
                 <button
-                  disabled={job.status === "accepted" || actionLoading === job._id + "accept"}
+                  disabled={job.status === "accepted" || actionLoading === job._id + "approve"}
                   onClick={() => handleAction(job._id, "approve")}
                   className={`px-3 py-1 rounded bg-green-500 text-white disabled:bg-green-200 disabled:cursor-not-allowed`}
                 >
-                  {actionLoading === job._id + "accept" ? "Accepting..." : "Accept"}
+                  {actionLoading === job._id + "approve" ? "Accepting..." : "Accept"}
                 </button>
                 <button
                   disabled={job.status === "rejected" || actionLoading === job._id + "reject"}
@@ -196,6 +165,7 @@ export default function FacultyJobsPage() {
                 </button>
               </div>
             </div>
+          </button>
           ))}
         </div>
       )}
