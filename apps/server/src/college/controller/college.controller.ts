@@ -1181,3 +1181,47 @@ export const getAllColleges=async(req:Request,res:Response)=>{
     })
   }
 }
+
+
+
+export const getDepartmets = async (req: Request, res: Response) => {
+  try {
+    // @ts-ignore
+    const user = req.user;
+
+    // Find the faculty based on the user's Google ID
+    const faculty = await Faculty.findOne({ googleId: user.uid });
+
+    if (!faculty) {
+      return res.status(404).json({ msg: "Faculty not found" });
+    }
+
+    // Find the college based on the faculty's college ID
+    const college = await College.findById(faculty.faculty_college_id);
+    if (!college) {
+      return res.status(404).json({ msg: "College not found" });
+    }
+    // Fetch all departments in one query to minimize database hits
+    const departments = await Department.find({
+      _id: { $in: college.coll_departments },
+    });
+    console.log("Departments:", departments);
+    if (!departments.length) {
+      return res.status(404).json({ msg: "No departments found" });
+    }
+    // Extract the department names
+    const departmentNames = departments.map(
+      (department: any) => department.dept_name
+    );
+
+    // Respond with the department names  
+    return res.status(200).json({
+      success: true,
+      departments: departmentNames,
+    });
+  }
+  catch (error: any) {
+    console.error("Error in getDepartments:", error);
+    return res.status(500).json({ msg: "Internal Server Error" });
+  } 
+}

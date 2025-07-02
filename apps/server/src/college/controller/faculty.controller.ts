@@ -179,3 +179,41 @@ export const getFacultyList = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
+export const getFacultyDetails = async (req: Request, res: Response) => {
+  try {
+    //@ts-ignore
+    const userId = req.user;
+
+    if (!userId || !userId.uid) {
+      return res.status(400).json({ msg: "User ID is required" });
+    }
+
+    // 1. Get the faculty by googleId
+    const faculty = await Faculty.findOne({ googleId: userId.uid }).select("-password");
+
+    if (!faculty) {
+      return res.status(404).json({ msg: "Faculty not found" });
+    }
+
+    // 2. Get the college using faculty_college_id
+    const college = await College.findById(faculty.faculty_college_id);
+
+    if (!college) {
+      return res.status(404).json({ msg: "Associated college not found" });
+    }
+
+    // 3. Return both
+    return res.status(200).json({
+      success: true,
+      faculty,
+      college,
+      msg: "Faculty and college details fetched successfully",
+    });
+
+  } catch (error) {
+    console.log("Error in getFacultyDetails:", error);
+    return res.status(500).json({ msg: "Internal Server Error" });
+  }
+};
