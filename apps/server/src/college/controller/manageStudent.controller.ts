@@ -4,7 +4,7 @@ import Faculty from "../models/faculty";
 import Department from "../models/department";
 import College from "../models/college";
 import { parse } from "dotenv";
-import Offer from "../../student/models/offers";
+import Offer from "../../company/models/offer";
 
 export const getAllStudents = async (req: Request, res: Response) => {
   try {
