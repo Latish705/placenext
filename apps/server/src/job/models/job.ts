@@ -34,6 +34,7 @@ const JobSchema = new Schema<IJob>({
   },
   company_name: {
     type: Schema.Types.ObjectId,
+    ref:"Company",
     required: true,
   },
   job_location: {

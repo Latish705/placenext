@@ -127,7 +127,7 @@ collegeRoutes.get(
   authenticateToken,
   getDepartmentStatistics
 );
-// collegeRoutes.get('/getAllColleges', getAllColleges);
+collegeRoutes.get('/getAllColleges', authenticateToken, getAllColleges);
 
 
 

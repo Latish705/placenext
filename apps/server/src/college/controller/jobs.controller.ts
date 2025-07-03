@@ -6,7 +6,6 @@ import Job from "../../job/models/job";
 import Faculty from "../models/faculty";
 import College from "../models/college";
 import CollegeJobLink from "../../job/models/collegeJobLink";
-import Offer from "../../student/models/offers";
 // import { getFacultyDetails } from "../../faculty/controller/faculty.controller"; 
 
 
