@@ -63,8 +63,8 @@ studentRoutes.get("/colleges", authenticateToken, getAllCollegeList);
 // student student statistics
 studentRoutes.get("/statistics", authenticateToken, getStudentStatistics);
 
-studentRoutes.get("job_offers",authenticateToken,getOfferByStudentId)
-studentRoutes.get("get_offer_by_id/:offerId",authenticateToken,getOfferByOfferId)
+studentRoutes.get("/job_offers",authenticateToken,getOfferByStudentId)
+studentRoutes.get("/get_offer_by_id/:offerId",authenticateToken,getOfferByOfferId)
 
 studentRoutes.get(
   "/job_statistics",
