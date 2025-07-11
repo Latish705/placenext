@@ -28,10 +28,15 @@ export const getDeparments = async (req: Request, res: Response) => {
 export const getOfferByStudentId = async (req: Request, res: Response) => {
   // @ts-ignore
   const user = req.user;
+  console.log("inside the sudo");
+  console.log(user.uid);
+  
 
-  const dbUser = await Student.findOne({stud_email:user.email})
+  const dbUser = await Student.findOne({googleId:user.uid})
+  console.log(dbUser);
+  
   try {
-      const { studentId } = req.body;
+      const studentId  = dbUser._id;
       if (!studentId) {
           return res.status(400).json({ success: false, message: "Student ID is required" });
       }
@@ -40,7 +45,7 @@ export const getOfferByStudentId = async (req: Request, res: Response) => {
       const cachedOffers = await redis.get(redisKey);
 
       if (cachedOffers) {
-          return res.status(200).json({ success: true, data: JSON.parse(cachedOffers) });
+          return res.status(200).json({ success: true, data: cachedOffers });
       }
 
       const student = await Student.findById(studentId);
