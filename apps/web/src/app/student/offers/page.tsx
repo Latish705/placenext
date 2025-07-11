@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 import useLoadingStore from "@/store/loadingStore";
 import { FaCheckCircle, FaTimesCircle, FaEnvelope, FaPhoneAlt, FaMapMarkerAlt, FaBriefcase, FaMoneyBillWave, FaClock } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
+import { fetchStudentData, StudentCacheKeys, clearStudentCache } from "@/config/services/cache_service";
 
 interface JobOffer {
   _id: string;
@@ -27,6 +28,12 @@ interface JobOffer {
   job_requirements: string[];
 }
 
+interface OffersResponse {
+  success: boolean;
+  message?: string;
+  offers: JobOffer[];
+}
+
 export default function JobOffers() {
   const router = useRouter();
   const { setLoading } = useLoadingStore();
@@ -37,35 +44,61 @@ export default function JobOffers() {
     loading: false
   });
 
-  useEffect(() => {
-    const fetchOffers = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get(
-          `${BackendUrl}/api/student/job_offers`,
-          {
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Function to refresh data and clear cache
+  const refreshData = async () => {
+    setRefreshing(true);
+    try {
+      // Clear cache keys related to student offers
+      clearStudentCache(StudentCacheKeys.OFFERS);
+      
+      // Fetch fresh data
+      await fetchOffers();
+      toast.success("Offers data refreshed");
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+      toast.error("Failed to refresh offers");
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  // Function to fetch offers with caching
+  const fetchOffers = async () => {
+    setLoading(true);
+    try {
+      // Use fetchStudentData for offers with cache
+      const offersData = await fetchStudentData<OffersResponse>(
+        `${BackendUrl}/api/student/job_offers`,
+        StudentCacheKeys.OFFERS,
+        {
+          expirationMs: 300000, // 5 minutes cache for offers
+          fetchOptions: {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          }
-        );
-        
-        if (response.data.success) {
-          setOffers(response.data.offers);
-          if (response.data.offers.length > 0) {
-            setActiveOffer(response.data.offers[0]);
-          }
-        } else {
-          toast.error("Failed to fetch job offers");
+          },
         }
-      } catch (error) {
-        console.error("Error fetching job offers:", error);
-        toast.error("An error occurred while fetching your job offers");
-      } finally {
-        setLoading(false);
+      );
+      
+      if (offersData.success) {
+        setOffers(offersData.offers);
+        if (offersData.offers.length > 0) {
+          setActiveOffer(offersData.offers[0]);
+        }
+      } else {
+        toast.error("Failed to fetch job offers");
       }
-    };
+    } catch (error) {
+      console.error("Error fetching job offers:", error);
+      toast.error("An error occurred while fetching your job offers");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchOffers();
   }, [setLoading]);
 
@@ -88,6 +121,11 @@ export default function JobOffers() {
       
       if (response.data.success) {
         toast.success("Job offer accepted successfully!");
+        
+        // Clear cache related to offers and dashboard stats
+        clearStudentCache(StudentCacheKeys.OFFERS);
+        clearStudentCache(StudentCacheKeys.DASHBOARD_STATS);
+        
         // Update the local state to reflect the change
         setOffers(offers.map(offer => 
           offer._id === offerId ? { ...offer, status: "accepted" } : offer
@@ -129,6 +167,11 @@ export default function JobOffers() {
       
       if (response.data.success) {
         toast.success("Job offer rejected");
+        
+        // Clear cache related to offers and dashboard stats
+        clearStudentCache(StudentCacheKeys.OFFERS);
+        clearStudentCache(StudentCacheKeys.DASHBOARD_STATS);
+        
         // Update the local state to reflect the change
         setOffers(offers.map(offer => 
           offer._id === offerId ? { ...offer, status: "rejected" } : offer
@@ -175,6 +218,38 @@ export default function JobOffers() {
 
   return (
     <div className="container mx-auto p-4 pt-10 md:p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Job Offers</h1>
+        
+        {/* Refresh Button */}
+        <button
+          onClick={refreshData}
+          disabled={refreshing || responseLoading.loading}
+          className={`inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-3
+            ${refreshing 
+              ? 'bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500' 
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+            }`}
+          aria-label="Refresh offers data"
+        >
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            width="16" 
+            height="16" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+            className={`mr-1 ${refreshing ? 'animate-spin' : ''}`}
+          >
+            <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+            <path d="M21 3v5h-5" />
+          </svg>
+          {refreshing ? 'Refreshing...' : 'Refresh'}
+        </button>
+      </div>
       <h1 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800 dark:text-white">
         Your Job Offers
       </h1>

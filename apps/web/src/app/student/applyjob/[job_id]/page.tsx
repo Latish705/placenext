@@ -9,10 +9,11 @@ import { Button } from "@/components/ui/button";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useRouter } from "next/navigation";
+import { fetchStudentData, StudentCacheKeys, clearStudentCache } from "@/config/services/cache_service";
 
 import useLoadingStore from "@/store/loadingStore";
 
-interface Job {
+export interface Job {
   _id: string; // MongoDB IDs are typically strings
   job_title: string;
   job_type: string;
@@ -40,29 +41,37 @@ const FinalApplication = () => {
   const [isChecked, setIsChecked] = useState(false);
   const [cvFile, setCvFile] = useState<File | null>(null);
   const { job_id } = useParams();
-  // Fetch job details from the backend
+  // Fetch job details with cache
   useEffect(() => {
     const fetchJobDetails = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(
+        
+        // Use cache service to fetch job details
+        const jobData = await fetchStudentData<{job: Job}>(
           `${BackendUrl}/api/student/company/${job_id}`,
+          StudentCacheKeys.JOBS,
           {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            expirationMs: 300000, // 5 minutes cache for job details
+            fetchOptions: {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
             },
           }
         );
-        setJob(response.data.job);
+        
+        setJob(jobData.job);
       } catch (error) {
         console.error("Error fetching job details:", error);
+        toast.error("Failed to load job details");
       } finally {
         setLoading(false);
       }
     };
 
     fetchJobDetails();
-  }, []);
+  }, [job_id]);
   // Handle checkbox change
   const handleCheckboxChange = () => {
     setIsChecked(!isChecked);

@@ -467,13 +467,19 @@ export const getJobForCollege = async (req: Request, res: Response) => {
     const collegeId = student.stud_college_id;
     const jobLinks = await CollegeJobLink.find({ college: collegeId });
 
+    console.log(collegeId,jobLinks);
+    
     // Fetch jobs with populated company name
     const jobs: any[] = await Promise.all(
       jobLinks.map(async (link: any) => {
+        console.log(link,link.job_info);
+        
         const job = await Job.findById(link.job_info);
+        console.log(job);
+        
         if (!job) return null;
         const company = await Company.findById(job.company_name);
-        const jobObj = job.toObject ? job.toObject() : { ...job };
+        const jobObj = job;
         jobObj.company_name = company ? company.comp_name : "Unknown";
         return jobObj;
       })

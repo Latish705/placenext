@@ -3,7 +3,8 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { BackendUrl } from "@/utils/constants";
-
+import { fetchStudentData, StudentCacheKeys, clearStudentCache } from "@/config/services/cache_service";
+import { RefreshCw } from "lucide-react";
 import useLoadingStore from "@/store/loadingStore";
 
 const Profile = () => {
@@ -54,8 +55,6 @@ const Profile = () => {
     sem6Marksheet: "",
     sem7Marksheet: "",
     sem8Marksheet: "",
-    // live_kt: "",
-    // dead_kt: "",
   });
 
   const [marksheets, setMarksheets] = useState({
@@ -69,102 +68,127 @@ const Profile = () => {
     sem8: null,
   });
 
-  // Fetch user profile data on component mount
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        setLoading(true);
-        const res = await axios.get(
-          `${BackendUrl}/api/student/get_user_details`,
-          {
+  // State for refresh button
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Fetch user profile data with caching
+  const fetchProfile = async (forceRefresh = false) => {
+    try {
+      setLoading(true);
+      
+      if (forceRefresh) {
+        // Clear profile cache when forcing refresh
+        clearStudentCache(StudentCacheKeys.PROFILE);
+      }
+      
+      // Use fetchStudentData with proper caching
+      const response = await fetchStudentData(
+        `${BackendUrl}/api/student/get_user_details`,
+        StudentCacheKeys.PROFILE,
+        {
+          
+          // Cache for 30 minutes (profile data doesn't change frequently)
+          expirationMs: 30 * 60 * 1000,
+          fetchOptions:{
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
           }
-        );
-        // console.log(res.data);
-        if (res.data.success) {
-          const { student } = res.data;
-          const {
-            stud_info_id,
-            stud_name,
-            stud_email,
-            stud_address,
-            stud_phone,
-            stud_dob,
-            stud_course,
-            stud_department,
-            googleId,
-            stud_college_id,
-          } = student;
-          localStorage.setItem("name", stud_name);
-
-          // Split the full name
-          const nameParts = stud_name.split(" ");
-          const firstName = nameParts[0];
-          const middleName = nameParts.length === 3 ? nameParts[1] : "";
-          const lastName = nameParts[nameParts.length - 1] || "";
-
-          // Map data to the profile state
-          setProfile({
-            firstName,
-            middleName,
-            lastName,
-            gender: "", // You can set default or fetch this info if available
-            fatherName: "", // Add field if available in the response
-            motherName: "", // Add field if available in the response
-            rollNumber: "", // Add field if available in the response
-            division: "", // Add field if available in the response
-            dateOfBirth: new Date(stud_dob).toISOString().split("T")[0], // Format the date for input field
-            email: stud_email,
-            alternateEmail: stud_info_id.stud_alternate_email || "",
-            aadharNumber: stud_info_id.stud_aadhar || "",
-            phoneNumber: stud_phone,
-            alternatePhoneNo: stud_info_id.stud_alternate_phone || "",
-            panNumber: stud_info_id.stud_pan || "",
-            address: stud_address,
-            state: "", // Set if available
-            country: "", // Set if available
-            pincode: "", // Set if available
-            courseType: stud_course,
-            admissionYear: stud_info_id.stud_addmission_year,
-            departmentName: stud_department,
-            tenthPercentage: stud_info_id.stud_ssc,
-            hscBoard: stud_info_id.stud_hsc_board,
-            twelfthPercentage: stud_info_id.stud_hsc,
-            sscBoard: stud_info_id.stud_ssc_board,
-            cet: stud_info_id.stud_cet,
-            sem1CGPI: stud_info_id.stud_sem1_grade,
-            sem2CGPI: stud_info_id.stud_sem2_grade,
-            sem3CGPI: stud_info_id.stud_sem3_grade,
-            sem4CGPI: stud_info_id.stud_sem4_grade,
-            sem5CGPI: stud_info_id.stud_sem5_grade || "not entered",
-            sem6CGPI: stud_info_id.stud_sem6_grade || "not entered",
-            sem7CGPI: stud_info_id.stud_sem7_grade || "not entered",
-            sem8CGPI: stud_info_id.stud_sem8_grade || "not entered",
-            //@ts-ignore
-            college: stud_college_id.coll_name, // Add field if available
-            sem1Marksheet: stud_info_id.stud_sem1_marksheet,
-            sem2Marksheet: stud_info_id.stud_sem2_marksheet,
-            sem3Marksheet: stud_info_id.stud_sem3_marksheet,
-            sem4Marksheet: stud_info_id.stud_sem4_marksheet,
-            sem5Marksheet: stud_info_id.stud_sem5_marksheet || "not entered",
-            sem6Marksheet: stud_info_id.stud_sem6_marksheet || "not entered",
-            sem7Marksheet: stud_info_id.stud_sem7_marksheet || "not entered",
-            sem8Marksheet: stud_info_id.stud_sem8_marksheet || "not entered",
-          });
-          console.log("Profile data set correctly");
-        } else {
-          toast.error(res.data.message);
         }
-      } catch (error) {
-        console.error(error);
-        toast.error("Failed to fetch profile.");
-      } finally {
-        setLoading(false);
-      }
-    };
+      );
+      //@ts-ignore
+      if (response.success) {
+        //@ts-ignore
+        const { student } = response;
+        const {
+          stud_info_id,
+          stud_name,
+          stud_email,
+          stud_address,
+          stud_phone,
+          stud_dob,
+          stud_course,
+          stud_department,
+          googleId,
+          stud_college_id,
+        } = student;
+        localStorage.setItem("name", stud_name);
 
+        // Split the full name
+        const nameParts = stud_name.split(" ");
+        const firstName = nameParts[0];
+        const middleName = nameParts.length === 3 ? nameParts[1] : "";
+        const lastName = nameParts[nameParts.length - 1] || "";
+
+        // Map data to the profile state
+        setProfile({
+          firstName,
+          middleName,
+          lastName,
+          gender: "", // You can set default or fetch this info if available
+          fatherName: "", // Add field if available in the response
+          motherName: "", // Add field if available in the response
+          rollNumber: "", // Add field if available in the response
+          division: "", // Add field if available in the response
+          dateOfBirth: new Date(stud_dob).toISOString().split("T")[0], // Format the date for input field
+          email: stud_email,
+          alternateEmail: stud_info_id.stud_alternate_email || "",
+          aadharNumber: stud_info_id.stud_aadhar || "",
+          phoneNumber: stud_phone,
+          alternatePhoneNo: stud_info_id.stud_alternate_phone || "",
+          panNumber: stud_info_id.stud_pan || "",
+          address: stud_address,
+          state: "", // Set if available
+          country: "", // Set if available
+          pincode: "", // Set if available
+          courseType: stud_course,
+          admissionYear: stud_info_id.stud_addmission_year,
+          departmentName: stud_department,
+          tenthPercentage: stud_info_id.stud_ssc,
+          hscBoard: stud_info_id.stud_hsc_board,
+          twelfthPercentage: stud_info_id.stud_hsc,
+          sscBoard: stud_info_id.stud_ssc_board,
+          cet: stud_info_id.stud_cet,
+          sem1CGPI: stud_info_id.stud_sem1_grade,
+          sem2CGPI: stud_info_id.stud_sem2_grade,
+          sem3CGPI: stud_info_id.stud_sem3_grade,
+          sem4CGPI: stud_info_id.stud_sem4_grade,
+          sem5CGPI: stud_info_id.stud_sem5_grade || "not entered",
+          sem6CGPI: stud_info_id.stud_sem6_grade || "not entered",
+          sem7CGPI: stud_info_id.stud_sem7_grade || "not entered",
+          sem8CGPI: stud_info_id.stud_sem8_grade || "not entered",
+          //@ts-ignore
+          college: stud_college_id.coll_name, // Add field if available
+          sem1Marksheet: stud_info_id.stud_sem1_marksheet,
+          sem2Marksheet: stud_info_id.stud_sem2_marksheet,
+          sem3Marksheet: stud_info_id.stud_sem3_marksheet,
+          sem4Marksheet: stud_info_id.stud_sem4_marksheet,
+          sem5Marksheet: stud_info_id.stud_sem5_marksheet || "not entered",
+          sem6Marksheet: stud_info_id.stud_sem6_marksheet || "not entered",
+          sem7Marksheet: stud_info_id.stud_sem7_marksheet || "not entered",
+          sem8Marksheet: stud_info_id.stud_sem8_marksheet || "not entered",
+        });
+        console.log("Profile data set correctly");
+      } else {
+        //@ts-ignore
+        toast.error(response.message || "Failed to fetch profile.");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to fetch profile.");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  // Function to refresh profile data
+  const refreshData = async () => {
+    setRefreshing(true);
+    await fetchProfile(true);
+  };
+
+  useEffect(() => {
     fetchProfile();
   }, []);
 
@@ -212,8 +236,12 @@ const Profile = () => {
       );
 
       if (res.data.success) {
+        // Clear profile cache after update
+        clearStudentCache(StudentCacheKeys.PROFILE);
         toast.success("Profile updated successfully!");
         setIsEditing(false); // Exit edit mode
+        // Refetch the profile to get the updated data
+        fetchProfile(true);
       } else {
         toast.error(res.data.message);
       }
@@ -225,7 +253,20 @@ const Profile = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Profile</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Profile</h1>
+        {!isEditing && (
+          <button
+            onClick={refreshData}
+            disabled={refreshing}
+            className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1 rounded-md"
+          >
+            <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
+            {refreshing ? "Refreshing..." : "Refresh"}
+          </button>
+        )}
+      </div>
+      
       {isEditing ? (
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
