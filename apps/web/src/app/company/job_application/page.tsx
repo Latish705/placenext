@@ -246,7 +246,10 @@ export default function JobCreationForm() {
   useEffect(() => {
     async function fetchColleges() {
       try {
-        const res = await axios.get(`${BackendUrl}/api/college/getAllColleges`);
+        const res = await axios.get(`${BackendUrl}/api/college/getAllColleges`,{headers: {
+          "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        }});  
         
         // Log the response to debug
         console.log("College response:", res.data);

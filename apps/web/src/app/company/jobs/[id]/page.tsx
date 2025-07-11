@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
 import { BackendUrl } from '@/utils/constants';
+import React, { useState as useStateModal } from 'react';
 
 interface Division {
   _id: string;
@@ -39,6 +40,29 @@ interface JobDetail {
   rounds: Round[];
 }
 
+interface Offer {
+  _id: string;
+  studentId: {
+    _id: string;
+    stud_name: string;
+    stud_email: string;
+    stud_department?: { dept_name: string };
+  };
+  status: string;
+  package: number;
+  createdAt: string;
+}
+
+interface OfferDetails {
+  _id: string;
+  jobId: any;
+  studentId: any;
+  status: string;
+  package: number;
+  createdAt: string;
+  [key: string]: any;
+}
+
 export default function JobDetail() {
   const params = useParams();
   const router = useRouter();
@@ -46,10 +70,17 @@ export default function JobDetail() {
   const [activeRound, setActiveRound] = useState<Round | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [offersLoading, setOffersLoading] = useState(false);
+  const [offerDetails, setOfferDetails] = useState<OfferDetails | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [offerFilter, setOfferFilter] = useState<'all' | 'accepted' | 'rejected' | 'offered'>('all');
 
   useEffect(() => {
     fetchJobDetails();
-  }, [params.id]);
+    fetchOffers(offerFilter);
+  }, [params.id, offerFilter]);
 
   const fetchJobDetails = async () => {
     try {
@@ -88,6 +119,36 @@ export default function JobDetail() {
     }
   };
 
+  // Fetch offers for this job
+  const fetchOffers = async (filter: 'all' | 'accepted' | 'rejected' | 'offered' = 'all') => {
+    try {
+      setOffersLoading(true);
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      let url = `${BackendUrl}/api/company/offer/list`;
+      let data: any = { jobId: params.id };
+
+      if (filter === 'accepted') url = `${BackendUrl}/api/company/offer/accepted`;
+      else if (filter === 'rejected') url = `${BackendUrl}/api/company/offer/rejected`;
+      else if (filter === 'offered') url = `${BackendUrl}/api/company/offer/offered`;
+
+      const response = await axios.post(url, data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (response.data.success) {
+        setOffers(response.data.data);
+      }
+    } catch (err) {
+      setOffers([]);
+    } finally {
+      setOffersLoading(false);
+    }
+  };
+
   const handlePromoteStudent = async (roundId: string, studentId: string) => {
     try {
       const token = localStorage.getItem('token');
@@ -120,6 +181,65 @@ export default function JobDetail() {
     } catch (err: any) {
       console.error('Error promoting student:', err);
       alert(err.response?.data?.message || 'Failed to promote student');
+    }
+  };
+
+  const handleSendOffer = async (jobId: string, studentId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+      const response = await axios.post(
+        `${BackendUrl}/api/company/createOffer`,
+        { jobId, studentId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      if (response.data.success) {
+        alert('Offer letter sent successfully!');
+      } else {
+        alert(response.data.message || 'Failed to send offer letter');
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to send offer letter');
+    }
+  };
+
+  // Fetch offer details by offerId
+  const handleViewOfferDetails = async (offerId: string) => {
+    try {
+      setDetailsLoading(true);
+      setShowModal(true);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+      const response = await axios.post(
+        `${BackendUrl}/api/company/offer`,
+        { offerId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      if (response.data.success) {
+        setOfferDetails(response.data.data);
+      } else {
+        setOfferDetails(null);
+      }
+    } catch (err) {
+      setOfferDetails(null);
+    } finally {
+      setDetailsLoading(false);
     }
   };
 
@@ -273,18 +393,27 @@ export default function JobDetail() {
                                 {student.selected ? 'Promoted' : 'Pending'}
                               </span>
                             </td>
-                            <td className="border border-gray-200 p-3">
-                              <button
-                                className={`px-4 py-2 rounded transition-colors ${
-                                  student.selected 
-                                    ? 'bg-gray-400 text-white cursor-not-allowed'
-                                    : 'bg-blue-500 text-white hover:bg-blue-600'
-                                }`}
-                                onClick={() => handlePromoteStudent(activeRound._id, student.student_id)}
-                                disabled={student.selected}
-                              >
-                                {student.selected ? 'Already Promoted' : 'Promote to Next Round'}
-                              </button>
+                            <td className="border border-gray-200 p-3 flex gap-2">
+                              {activeRound._id !== job.rounds[job.rounds.length - 1]._id ? (
+                                <button
+                                  className={`px-4 py-2 rounded transition-colors ${
+                                    student.selected
+                                      ? 'bg-gray-400 text-white cursor-not-allowed'
+                                      : 'bg-blue-500 text-white hover:bg-blue-600'
+                                  }`}
+                                  onClick={() => handlePromoteStudent(activeRound._id, student.student_id)}
+                                  disabled={student.selected}
+                                >
+                                  {student.selected ? 'Already Promoted' : 'Promote to Next Round'}
+                                </button>
+                              ) : (
+                                <button
+                                  className="px-4 py-2 rounded bg-purple-600 text-white hover:bg-purple-700"
+                                  onClick={() => handleSendOffer(job._id, student.student_id)}
+                                >
+                                  Send Offer Letter
+                                </button>
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -323,6 +452,124 @@ export default function JobDetail() {
           </div>
         )}
       </div>
+
+      {/* Offers List Section */}
+      <div className="bg-white rounded-lg shadow-md p-6 mt-8">
+        <h2 className="text-2xl font-semibold mb-6 text-gray-800">Offers Given</h2>
+        
+        {/* Offer Filter Buttons */}
+        <div className="flex gap-2 mb-4">
+          <button
+            className={`px-3 py-1 rounded ${offerFilter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+            onClick={() => setOfferFilter('all')}
+          >
+            All
+          </button>
+          <button
+            className={`px-3 py-1 rounded ${offerFilter === 'accepted' ? 'bg-green-600 text-white' : 'bg-gray-200'}`}
+            onClick={() => setOfferFilter('accepted')}
+          >
+            Accepted
+          </button>
+          <button
+            className={`px-3 py-1 rounded ${offerFilter === 'rejected' ? 'bg-red-600 text-white' : 'bg-gray-200'}`}
+            onClick={() => setOfferFilter('rejected')}
+          >
+            Rejected
+          </button>
+          <button
+            className={`px-3 py-1 rounded ${offerFilter === 'offered' ? 'bg-blue-400 text-white' : 'bg-gray-200'}`}
+            onClick={() => setOfferFilter('offered')}
+          >
+            Offered
+          </button>
+        </div>
+
+        {offersLoading ? (
+          <div>Loading offers...</div>
+        ) : offers.length === 0 ? (
+          <div className="text-gray-500">No offers have been given for this job yet.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border border-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="border border-gray-200 p-3 text-left font-medium text-gray-700">Student Name</th>
+                  <th className="border border-gray-200 p-3 text-left font-medium text-gray-700">Email</th>
+                  <th className="border border-gray-200 p-3 text-left font-medium text-gray-700">Department</th>
+                  <th className="border border-gray-200 p-3 text-left font-medium text-gray-700">Package</th>
+                  <th className="border border-gray-200 p-3 text-left font-medium text-gray-700">Status</th>
+                  <th className="border border-gray-200 p-3 text-left font-medium text-gray-700">Offered On</th>
+                  <th className="border border-gray-200 p-3 text-left font-medium text-gray-700">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {offers.map((offer) => (
+                  <tr key={offer._id} className="hover:bg-gray-50">
+                    <td className="border border-gray-200 p-3">{offer.studentId?.stud_name || '-'}</td>
+                    <td className="border border-gray-200 p-3">{offer.studentId?.stud_email || '-'}</td>
+                    <td className="border border-gray-200 p-3">{offer.studentId?.stud_department?.dept_name || '-'}</td>
+                    <td className="border border-gray-200 p-3">₹{offer.package?.toLocaleString() || '-'}</td>
+                    <td className="border border-gray-200 p-3">
+                      <span className={`px-2 py-1 rounded text-sm ${
+                        offer.status === 'offered'
+                          ? 'bg-blue-100 text-blue-800'
+                          : offer.status === 'accepted'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {offer.status.charAt(0).toUpperCase() + offer.status.slice(1)}
+                      </span>
+                    </td>
+                    <td className="border border-gray-200 p-3">
+                      {offer.createdAt ? new Date(offer.createdAt).toLocaleString() : '-'}
+                    </td>
+                    <td className="border border-gray-200 p-3">
+                      <button
+                        className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700"
+                        onClick={() => handleViewOfferDetails(offer._id)}
+                      >
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Offer Details Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg relative">
+            <button
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+              onClick={() => setShowModal(false)}
+            >
+              ✕
+            </button>
+            <h3 className="text-xl font-semibold mb-4">Offer Details</h3>
+            {detailsLoading ? (
+              <div>Loading...</div>
+            ) : offerDetails ? (
+              <div className="space-y-2">
+                <div><strong>Student Name:</strong> {offerDetails.studentId?.stud_name || '-'}</div>
+                <div><strong>Email:</strong> {offerDetails.studentId?.stud_email || '-'}</div>
+                <div><strong>Department:</strong> {offerDetails.studentId?.stud_department?.dept_name || '-'}</div>
+                <div><strong>Package:</strong> ₹{offerDetails.package?.toLocaleString() || '-'}</div>
+                <div><strong>Status:</strong> {offerDetails.status}</div>
+                <div><strong>Offered On:</strong> {offerDetails.createdAt ? new Date(offerDetails.createdAt).toLocaleString() : '-'}</div>
+                <div><strong>Job Title:</strong> {offerDetails.jobId?.job_title || '-'}</div>
+                {/* Add more fields as needed */}
+              </div>
+            ) : (
+              <div className="text-red-500">Failed to load offer details.</div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

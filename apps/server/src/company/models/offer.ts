@@ -1,21 +1,28 @@
-import { Schema, model } from "mongoose";
+import { Schema, model, Types, Document } from 'mongoose';
+import { primarydb } from '../..';
 
-import mongoose from "mongoose";
-import { ICompany } from "./company";
-
-export interface IJob_Offers extends Document {
-  _id?: string;
-  job_title: string;
-  offer_date: Date;
-  offer_status: string;
-  job_location: string;
-  job_salary: number;
-  job_description: string;
-  job_requirements: string[];
-  job_posted_date: Date;
-  yr_of_exp_req: number;
-  job_timing: string;
-  status: string;
-  stud_id: string;
-  comp_id: ICompany["_id"];
+export interface IOffer extends Document {
+  package: number;
+  company: string;
+  jobId: Types.ObjectId;
+  studentId: Types.ObjectId;
+  status: 'offered' | 'accepted' | 'rejected';
+  offerNumber: number;
 }
+
+const OfferSchema = new Schema<IOffer>({
+  package: { type: Number, required: true },
+  company: { type: String, required: true },
+  jobId: { type: Schema.Types.ObjectId, ref: 'Job', required: true },
+  studentId: { type: Schema.Types.ObjectId, ref: 'Student', required: true },
+  status: {
+    type: String,
+    enum: ['offered', 'accepted', 'rejected'],
+    default: 'offered'
+  }
+}, {
+  timestamps: true
+});
+
+const Offer = primarydb.model('Offer', OfferSchema);
+export default Offer;
