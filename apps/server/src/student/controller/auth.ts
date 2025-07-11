@@ -194,8 +194,8 @@ export const applicationFrom = async (req: Request, res: Response) => {
       // stud_placement_company: fields.placementCompany, // this is remaining
       // stud_placement_date: fields.placementDate, // this is remaining
       // student_skills: fields.skills, // this is remaining
-      stud_linkedIn: fields.linkedIn, // this is remaining
-      stud_github: fields.github, // this is remaining
+      // stud_linkedIn: fields.linkedIn, // this is remaining
+      // stud_github: fields.github, // this is remaining
     });
 
     const savedStudentInfo = await studentInfo.save();

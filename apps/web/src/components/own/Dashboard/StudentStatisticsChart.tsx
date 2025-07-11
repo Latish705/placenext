@@ -60,12 +60,11 @@ const StudentStatisticsChart: React.FC = () => {
       
       // Use cache service to fetch statistics
       const response = await fetchStudentData<{success: boolean, studentsData: StudentStatistics, msg?: string}>(
-        `${BackendUrl}/api/student/statistics`,
+        `${BackendUrl}/api/college/get_students_statistics`,
         StudentCacheKeys.DASHBOARD_STATS,
         {
           expirationMs: 3600000,
-          fetchOptions:{
-            
+          fetchOptions: {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
