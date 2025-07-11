@@ -8,15 +8,22 @@ import { useState, useEffect } from "react";
 import { HiMenu, HiX } from "react-icons/hi";
 import { motion, AnimatePresence } from "framer-motion";
 import useThemeStore from "@/store/store";
-//light theme
-import { MdDarkMode } from "react-icons/md";
-//dark theme
-import { MdOutlineDarkMode } from "react-icons/md";
 import ToggleTheme from "../ThemeToggle";
 
 export default function LandingNav() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  // Close mobile menu when user resizes to desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024 && menuOpen) {
+        setMenuOpen(false);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [menuOpen]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -26,103 +33,114 @@ export default function LandingNav() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [menuOpen]);
+
   return (
-    <div
-      className={`fixed top-0 left-0 w-full z-50 px-4 lg:px-8 py-1 transition-all duration-300 ease-in-out ${
+    <header
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ease-in-out ${
         isScrolled
-          ? "bg-white/80 dark:bg-gray-900/80 shadow-lg"
+          ? "bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm shadow-md"
           : "bg-transparent"
       }`}
     >
-      <div className="flex items-center justify-between">
-        {/* Logo */}
-        <div className="flex items-center">
-          <LogoText />
-        </div>
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="flex items-center justify-between">
+          {/* Logo */}
+          <Link href="/" className="flex items-center">
+            <LogoText />
+          </Link>
 
-        {/* Navigation options */}
-
-        <div className="flex flex-row gap-8">
-          <div className="hidden lg:flex items-center space-x-6">
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center space-x-8">
             <NavOptions />
-          </div>
-
-          {/* Login/Register Buttons for large screens */}
-          <div className="hidden lg:flex items-center space-x-3">
-            <div className=" ">
+            
+            <div className="flex items-center space-x-2">
               <ToggleTheme
-                style={
-                  "border-[1px] border-black dark:border-white hover:bg-gray-100 dark:hover:bg-gray-700 px-4 py-2"
-                }
+                style="rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               />
+              
+              <div className="flex items-center space-x-2">
+                <Link href="/authentication/studentLogin">
+                  <Button variant="outline" size="sm" className="font-medium text-sm px-4 py-2 transition-colors">
+                    Student
+                  </Button>
+                </Link>
+                <Link href="/authentication/facultyLogin">
+                  <Button variant="outline" size="sm" className="font-medium text-sm px-4 py-2 transition-colors">
+                    Faculty
+                  </Button>
+                </Link>
+                <Link href="/authentication/companyLogin">
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-md transition-colors">
+                    Company Login
+                  </Button>
+                </Link>
+              </div>
             </div>
-
-            <Link href="/authentication/studentLogin">
-              <Button className="bg-white dark:bg-gray-800 text-black dark:text-white border-[1px] border-black dark:border-white hover:bg-gray-100 dark:hover:bg-gray-700 px-3 py-2">
-                <span>Student Login</span>
-              </Button>
-            </Link>
-            <Link href="/authentication/facultyLogin">
-              <Button className="bg-white dark:bg-gray-800 text-black dark:text-white border-[1px] border-black dark:border-white hover:bg-gray-100 dark:hover:bg-gray-700 px-3 py-2">
-                <span>Faculty Login</span>
-              </Button>
-            </Link>
-            <Link href="/authentication/companyLogin">
-              <Button className="bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 w-10/12 px-4 py-2">
-                Company Login
-              </Button>
-            </Link>
           </div>
-        </div>
-        {/* Mobile Menu Icon */}
-        <div className="lg:hidden flex flex-row items-center justify-center gap-2">
-          <div className=" ">
+
+          {/* Mobile Menu Controls */}
+          <div className="lg:hidden flex items-center space-x-3">
             <ToggleTheme
-              style={
-                "border-[1px] border-black dark:border-white hover:bg-gray-100 dark:hover:bg-gray-700"
-              }
+              style="rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="p-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+              onClick={() => setMenuOpen(!menuOpen)}
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+            >
+              {menuOpen ? <HiX size={24} /> : <HiMenu size={24} />}
+            </Button>
           </div>
-          <Button
-            className=" border-[1px] border-black dark:border-white
-               hover:bg-gray-100 dark:hover:bg-gray-700 px-3 py-2"
-            onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Toggle Menu"
-          >
-            {menuOpen ? <HiX size={28} /> : <HiMenu size={28} />}
-          </Button>
         </div>
-      </div>
+      </nav>
 
-      {/* Mobile Menu for smaller screens */}
+      {/* Mobile Menu */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="lg:hidden absolute top-full left-0 w-full bg-white dark:bg-gray-900 shadow-lg flex flex-col items-center py-6 space-y-4"
+            className="lg:hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800"
           >
-            <NavOptions />
-            <Link href="/authentication/studentLogin">
-              <Button className="bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 w-10/12 px-4 py-2">
-                Student Login
-              </Button>
-            </Link>
-            <Link href="/authentication/facultyLogin">
-              <Button className="bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 w-10/12 px-4 py-2">
-                Faculty Login
-              </Button>
-            </Link>
-            <Link href="/authentication/companyLogin">
-              <Button className="bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 w-10/12 px-4 py-2">
-                Company Login
-              </Button>
-            </Link>
+            <div className="px-4 py-6 space-y-6">
+              <NavOptions />
+              
+              <div className="grid grid-cols-1 gap-4 pt-4 border-t border-gray-200 dark:border-gray-800">
+                <Link href="/authentication/studentLogin" className="w-full">
+                  <Button variant="outline" className="w-full justify-center text-base">
+                    Student Login
+                  </Button>
+                </Link>
+                <Link href="/authentication/facultyLogin" className="w-full">
+                  <Button variant="outline" className="w-full justify-center text-base">
+                    Faculty Login
+                  </Button>
+                </Link>
+                <Link href="/authentication/companyLogin" className="w-full">
+                  <Button className="w-full justify-center bg-blue-600 hover:bg-blue-700 text-white text-base">
+                    Company Login
+                  </Button>
+                </Link>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </header>
   );
 }
