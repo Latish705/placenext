@@ -138,4 +138,32 @@ export const logout = async () => {
   }
 };
 
+// Sign in with email and password
+export const signInWithEmailPassword = async (email: string, password: string) => {
+  try {
+    const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+    const user = userCredential.user;
+    
+    if (user) {
+      const token = await user.getIdToken();
+      const refreshToken = user.refreshToken;
+      return { token, refreshToken };
+    }
+    throw new Error('Failed to get user token');
+  } catch (error: any) {
+    // Convert Firebase auth errors to more user-friendly messages
+    if (error.code === 'auth/user-not-found') {
+      throw new Error('No account found with this email. Please sign up first.');
+    } else if (error.code === 'auth/wrong-password') {
+      throw new Error('Incorrect password. Please try again.');
+    } else if (error.code === 'auth/invalid-email') {
+      throw new Error('Invalid email format.');
+    } else if (error.code === 'auth/user-disabled') {
+      throw new Error('This account has been disabled. Please contact support.');
+    } else {
+      throw new Error(error.message || 'Login failed. Please try again.');
+    }
+  }
+};
+
 export default firebase;

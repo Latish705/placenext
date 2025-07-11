@@ -10,8 +10,9 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import axios from "axios";
 import { BackendUrl } from "@/utils/constants";
+import { fetchWithLocalCache } from "@/config/services/cache_service";
+
 
 // Register Chart.js components
 ChartJS.register(
@@ -62,21 +63,35 @@ export default function DepartmentStatistics() {
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
 
   useEffect(() => {
-    const getStatistics = async () => {
+    const getYearsData = async () => {
       try {
-        const response = await axios.get(
-          `${BackendUrl}/api/college/get_department_statistics`,
-          {
+        // Use fetchWithLocalCache for years data
+        const yearsData = await fetchWithLocalCache<{years: number[]}>(`${BackendUrl}/api/college/get_years`, {
+          expirationMs: 3600000, // 1 hour cache
+          fetchOptions: {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
           }
+        });
+        
+        setYears(yearsData.years);
+        setSelectedYear(yearsData.years[0]); // Default to the first year
+      } catch (error) {
+        console.error("Error fetching years:", error);
+      }
+    };
+
+    const getStatistics = async () => {
+      try {
+        // Use fetchWithLocalCache for statistics data
+        const statsData = await fetchWithLocalCache<{years: number[], departments: any}>(
+          `${BackendUrl}/api/college/get_department_statistics`,
+          { expirationMs: 3600000 }
         );
 
-        const { years, departments } = response.data;
-        setYears(years);
-        setSelectedYear(years[0]); // Default to the first year
-
+        const { departments } = statsData;
+        
         // Extract department names, placed, and not placed counts
         const labels = Object.keys(departments);
         const placedData = labels.map((dept) => departments[dept].placed);
@@ -88,20 +103,21 @@ export default function DepartmentStatistics() {
             {
               label: "Placed",
               data: placedData,
-              backgroundColor: "rgba(75, 192, 192, 0.7)", // Bar color for "Placed"
+              backgroundColor: "rgba(75, 192, 192, 0.7)",
             },
             {
               label: "Not Placed",
               data: notPlacedData,
-              backgroundColor: "rgba(255, 99, 132, 0.7)", // Bar color for "Not Placed"
+              backgroundColor: "rgba(255, 99, 132, 0.7)",
             },
           ],
         });
       } catch (error) {
-        console.error(error);
+        console.error("Error fetching statistics:", error);
       }
     };
 
+    getYearsData();
     getStatistics();
   }, []);
 
@@ -112,16 +128,19 @@ export default function DepartmentStatistics() {
     setSelectedYear(year);
 
     try {
-      const response = await axios.get(
+      const response = await fetchWithLocalCache<{ departments: any }>(
         `${BackendUrl}/api/college/get_department_statistics?year=${year}`,
         {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+          expirationMs: 3600000, // 1 hour cache
+          fetchOptions: { // Put headers inside fetchOptions
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
         }
       );
 
-      const { departments } = response.data;
+      const { departments } = response;
 
       // Extract department names, placed, and not placed counts
       const labels = Object.keys(departments);

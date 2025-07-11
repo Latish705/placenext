@@ -18,6 +18,8 @@ import TeamSection from "@/components/own/Landing/TeamSection";
 import BlueLandingText from "@/components/own/Landing/Text/BlueLandingText";
 import JobApplicationStatus from "./company/job_application_status/page";
 
+
+
 const inconsolata = Inconsolata({
   subsets: ["latin"],
   weight: ["400", "600", "800"],
