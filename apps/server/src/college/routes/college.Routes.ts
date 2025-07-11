@@ -42,7 +42,7 @@ import {
   studentsAcceptedUnder6LPA,
   studentsAcceptedSecondOfferOver6LPA,
   getOffersAbove6LPA,
-  getOffersBelow6LPA
+  getOffersBelow6lpa
 } from "../controller/manageStudent.controller";
 
 import {
@@ -137,7 +137,7 @@ collegeRoutes.post("/mark_as_placed", authenticateToken, markAsPlaced);
 collegeRoutes.get("/total_offers", authenticateToken, totalNoOfOffers);
 collegeRoutes.get("/students_accepted_under_6lpa", authenticateToken, studentsAcceptedUnder6LPA);
 collegeRoutes.get("/students_accepted_second_offer_above_6lpa", authenticateToken, studentsAcceptedSecondOfferOver6LPA);
-collegeRoutes.get("/offers_above_6lpa", authenticateToken, getOffersAbove6LPA);
-collegeRoutes.get("/offers_below_6lpa", authenticateToken, getOffersBelow6LPA);
+collegeRoutes.get("/get_all_offers_above_6lpa", authenticateToken, getOffersAbove6LPA);
+collegeRoutes.get("/get_all_offers_below_6lpa", authenticateToken, getOffersBelow6lpa);
 
 export default collegeRoutes;

@@ -9,6 +9,8 @@ import { Document_server_url } from "../../app";
 import Job, { IJob } from "../../job/models/job";
 import Application from "../models/application";
 import { jobs } from "googleapis/build/src/apis/jobs";
+import CollegeJobLink from "../../job/models/collegeJobLink";
+import Company from "../../company/models/company";
 const requiredFields = [
   "firstName",
   "middleName",
@@ -192,8 +194,8 @@ export const applicationFrom = async (req: Request, res: Response) => {
       // stud_placement_company: fields.placementCompany, // this is remaining
       // stud_placement_date: fields.placementDate, // this is remaining
       // student_skills: fields.skills, // this is remaining
-      stud_linkedIn: fields.linkedIn, // this is remaining
-      stud_github: fields.github, // this is remaining
+      // stud_linkedIn: fields.linkedIn, // this is remaining
+      // stud_github: fields.github, // this is remaining
     });
 
     const savedStudentInfo = await studentInfo.save();
@@ -429,29 +431,24 @@ export const getStudentStatistics = async (req: Request, res: Response) => {
   }
 };
 
+
+
 export const getJobForCollege = async (req: Request, res: Response) => {
   try {
     // @ts-ignore
     const user = req.user;
-    const student = await Student.findOne({ googleId: user.uid }).populate(
-      "stud_department"
-    );
+    const student = await Student.findOne({ googleId: user.uid }).populate("stud_department");
 
     if (!student) {
       return res.status(404).json({ success: false, msg: "Student not found" });
     }
 
-    const studentInfo = await StudentInfo.findOne({
-      _id: student.stud_info_id,
-    });
-
+    const studentInfo = await StudentInfo.findById(student.stud_info_id);
     if (!studentInfo) {
-      return res
-        .status(404)
-        .json({ success: false, msg: "Student info not found" });
+      return res.status(404).json({ success: false, msg: "Student info not found" });
     }
 
-    // Calculate the average CGPI
+    // Calculate average CGPI
     const grades = [
       studentInfo.stud_sem1_grade,
       studentInfo.stud_sem2_grade,
@@ -463,65 +460,77 @@ export const getJobForCollege = async (req: Request, res: Response) => {
       studentInfo.stud_sem8_grade,
     ];
 
-    // Print grades for debugging
-    // console.log("Grades:", grades);
+    const validGrades = grades.filter(g => g !== "" && !isNaN(Number(g)));
+    const totalCGPI = validGrades.reduce((sum, g) => sum + Number(g), 0);
+    const averageCGPI = validGrades.length > 0 ? totalCGPI / validGrades.length : 0;
 
-    // Ensure grades are numbers and ignore empty strings
-    let validSemesters = 0;
-    const totalGrades = grades.reduce((sum: any, grade: any) => {
-      // Check if the grade is a valid number or a non-empty string that can be converted to a number
-      return grade !== "" && !isNaN(Number(grade)) ? sum + Number(grade) : sum;
-    }, 0);
+    const collegeId = student.stud_college_id;
+    const jobLinks = await CollegeJobLink.find({ college: collegeId });
 
-    // Count valid semesters (where the grade is not an empty string and can be converted to a number)
-    validSemesters = grades.filter(
-      (grade) => grade !== "" && grade !== null && !isNaN(Number(grade))
-    ).length;
-
-    // Calculate the average CGPI, avoiding division by zero
-    const averageCGPI = validSemesters > 0 ? totalGrades / validSemesters : 0;
-
-    // console.log("averageCGPI", averageCGPI);
-
-    // Fetch all jobs posted at the student's college
-    const jobs = await Job.find({
-      college: student.stud_college_id,
-    });
+    console.log(collegeId,jobLinks);
+    
+    // Fetch jobs with populated company name
+    const jobs: any[] = await Promise.all(
+      jobLinks.map(async (link: any) => {
+        console.log(link,link.job_info);
+        
+        const job = await Job.findById(link.job_info);
+        console.log(job);
+        
+        if (!job) return null;
+        const company = await Company.findById(job.company_name);
+        const jobObj = job;
+        jobObj.company_name = company ? company.comp_name : "Unknown";
+        return jobObj;
+      })
+    );
 
     if (!jobs.length) {
-      return res
-        .status(400)
-        .json({ success: false, student, message: "No Jobs Found" });
+      return res.status(400).json({ success: false, student, message: "No Jobs Found" });
     }
-    //can we print reasone for not eligible
 
-    // Determine eligibility for each job
+    // Build list of jobs with eligibility info
     const jobsWithEligibility = jobs.map((job: any) => {
-      const isEligible =
-        studentInfo.no_of_dead_backlogs <= job.max_no_dead_kt &&
-        studentInfo.no_of_live_backlogs <= job.max_no_live_kt &&
-        averageCGPI >= job.min_CGPI && // Use average CGPI
-        //@ts-ignore
-        job.branch_allowed.includes(student?.stud_department?.dept_name);
-      // job.passing_year.includes(student.stud_year);
-      // console.log("isEligible", isEligible);
+      const reasons: string[] = [];
+
+      if (studentInfo.no_of_dead_backlogs > job.max_no_dead_kt) {
+        reasons.push(`Too many dead KTs (allowed: ${job.max_no_dead_kt})`);
+      }
+
+      if (studentInfo.no_of_live_backlogs > job.max_no_live_kt) {
+        reasons.push(`Too many live KTs (allowed: ${job.max_no_live_kt})`);
+      }
+
+      if (averageCGPI < job.min_CGPI) {
+        reasons.push(`CGPI too low (required: ${job.min_CGPI})`);
+      }
+
+      if (!job.branch_allowed.includes(student?.stud_department?.dept_name)) {
+        reasons.push(`Branch not allowed`);
+      }
+
+      const isEligible = reasons.length === 0;
 
       return {
-        ...job.toObject(), // Convert the job document to a plain object
-        isEligible, // Add eligibility status
+        ...job.toObject(),
+        company_name: job.company_name?.comp_name ?? "Unknown",
+        isEligible,
+        ineligibilityReasons: isEligible ? [] : reasons,
       };
     });
 
-    return res
-      .status(200)
-      .json({ success: true, student, jobs: jobsWithEligibility });
+    return res.status(200).json({
+      success: true,
+      student,
+      jobs: jobsWithEligibility,
+    });
+
   } catch (error: any) {
-    console.error("Error in getJobForCollege", error.message);
-    return res
-      .status(500)
-      .json({ success: false, msg: "Internal Server Error" });
+    console.error("Error in getJobForCollege:", error.message);
+    return res.status(500).json({ success: false, msg: "Internal Server Error" });
   }
 };
+
 
 export const getJobDetailsById = async (req: Request, res: Response) => {
   try {
