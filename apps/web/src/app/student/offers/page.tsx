@@ -81,6 +81,7 @@ export default function JobOffers() {
           },
         }
       );
+      console.log(offersData);
       
       if (offersData.success) {
         setOffers(offersData.offers);
@@ -118,6 +119,7 @@ export default function JobOffers() {
           },
         }
       );
+      console.log(response.data);
       
       if (response.data.success) {
         toast.success("Job offer accepted successfully!");
