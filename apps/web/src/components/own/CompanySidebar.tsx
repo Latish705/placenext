@@ -59,11 +59,6 @@ const companyOptions: Option[] = [
     icon: <FaUserDoctor />,
   },
   {
-    name: "Messages",
-    path: "/company/messages/inbox",
-    icon: <BiMessageSquareMinus />,
-  },
-  {
     name: "Settings",
     path: "/company/settings",
     icon: <CiSettings />,

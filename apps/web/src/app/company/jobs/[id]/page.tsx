@@ -381,9 +381,10 @@ export default function JobDetail() {
                       </thead>
                       <tbody>
                         {activeRound.student_list.map((student) => (
+                          console.log("student:- ",student),
                           <tr key={student.student_id} className="hover:bg-gray-50">
                             <td className="border border-gray-200 p-3">{student.name}</td>
-                            <td className="border border-gray-200 p-3">{student.division.dept_name}</td>
+                            {/* <td className="border border-gray-200 p-3">{student.division.dept_name}</td> */}
                             <td className="border border-gray-200 p-3">
                               <span className={`px-2 py-1 rounded text-sm ${
                                 student.selected 
@@ -459,12 +460,12 @@ export default function JobDetail() {
         
         {/* Offer Filter Buttons */}
         <div className="flex gap-2 mb-4">
-          <button
+          {/* <button
             className={`px-3 py-1 rounded ${offerFilter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
             onClick={() => setOfferFilter('all')}
           >
             All
-          </button>
+          </button> */}
           <button
             className={`px-3 py-1 rounded ${offerFilter === 'accepted' ? 'bg-green-600 text-white' : 'bg-gray-200'}`}
             onClick={() => setOfferFilter('accepted')}

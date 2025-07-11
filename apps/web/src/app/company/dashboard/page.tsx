@@ -72,14 +72,27 @@ export default function CompanyDashboard() {
         totalApplications: 0, // This would need a separate API call
       });
 
-      // Set recent jobs from pending jobs
-      if (pendingJobs.length > 0) {
-        setRecentJobs(pendingJobs.slice(0, 5));
-      } else if (acceptedJobs.length > 0) {
-        setRecentJobs(acceptedJobs.slice(0, 5));
-      } else if (rejectedJobs.length > 0) {
-        setRecentJobs(rejectedJobs.slice(0, 5));
-      }
+     const extractRecentJobs = (jobs: any[]) => {
+  return jobs
+    .filter(job => job.job_info) // only if job_info exists
+    .slice(0, 5)
+    .map(job => ({
+      _id: job.job_info._id,
+      job_title: job.job_info.job_title,
+      job_location: job.job_info.job_location,
+      status: job.status,
+      created_at: job.job_info.created_at
+    }));
+};
+
+if (pendingJobs.length > 0) {
+  setRecentJobs(extractRecentJobs(pendingJobs));
+} else if (acceptedJobs.length > 0) {
+  setRecentJobs(extractRecentJobs(acceptedJobs));
+} else if (rejectedJobs.length > 0) {
+  setRecentJobs(extractRecentJobs(rejectedJobs));
+}
+
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
       // Set default empty state
@@ -111,6 +124,7 @@ export default function CompanyDashboard() {
     );
   }
 
+  console.log("job:- ",recentJobs);
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold text-gray-800 mb-8">Company Dashboard</h1>

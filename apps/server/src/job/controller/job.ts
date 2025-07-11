@@ -6,16 +6,17 @@ import College from "../../college/models/college";
 import mongoose from "mongoose";
 import Round from "../../round/models/round.model";
 import RoundStudentLink from "../../round/models/roundstudentlink";
+import { redis } from "../..";
+
 export const createJobByCompany = async (req: Request, res: Response) => {
   try {
-    // @ts-ignore - if you don't have proper type, ignore for now
+    // @ts-ignore
     const loginCompanyUser = req.user;
     console.log("clg: Logged-in user:", loginCompanyUser);
-    console.log("req body:-",req.body);
+    console.log("req body:-", req.body);
 
     const company = await Company.findOne({ googleId: loginCompanyUser.uid });
     console.log("clg: Fetched company from DB:", company);
-
     if (!company) {
       console.log("clg: Company not found.");
       return res.status(400).json({
@@ -39,12 +40,11 @@ export const createJobByCompany = async (req: Request, res: Response) => {
       branch_allowed,
       passing_year,
       job_timing,
-      college, // array of college ObjectIds
+      college,
     } = req.body;
 
     console.log("clg: Request body:", req.body);
 
-    // Validate required fields
     const requiredFields = [
       job_title, job_type, job_location, job_salary, job_description,
       job_requirements, job_posted_date, max_no_dead_kt, max_no_live_kt,
@@ -59,23 +59,21 @@ export const createJobByCompany = async (req: Request, res: Response) => {
       });
     }
 
-for (const c of college) {
-  if (!mongoose.Types.ObjectId.isValid(c)) {
-    return res.status(400).json({
-      success: false,
-      message: `Invalid college ID: ${c}`,
-    });
-  }
-  const coll = await College.findById(c);
-  if (!coll) {
-    return res.status(400).json({
-      success: false,
-      message: "College is not present here",
-    });
-  }
-}
-
-
+    for (const c of college) {
+      if (!mongoose.Types.ObjectId.isValid(c)) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid college ID: ${c}`,
+        });
+      }
+      const coll = await College.findById(c);
+      if (!coll) {
+        return res.status(400).json({
+          success: false,
+          message: "College is not present here",
+        });
+      }
+    }
 
     console.log("clg: All required fields are present. Proceeding...");
 
@@ -104,11 +102,10 @@ for (const c of college) {
 
       if (collegesToLink.length === 0) {
         console.log("clg: All colleges are already linked.");
-        res.status(409).json({
+        return res.status(409).json({
           success: false,
           message: "Job already exists and is linked to all selected colleges.",
         });
-        return;
       }
 
       for (const collegeId of collegesToLink) {
@@ -160,14 +157,15 @@ for (const c of college) {
       await newLink.save();
       console.log("clg: New CollegeJobLink created for new job:", newLink);
     }
-
+    redis.del(`pendingJobs:${loginCompanyUser.uid}`);
+    redis.del(`acceptedJobs:${loginCompanyUser.uid}`);
+    redis.del(`rejectedJobs:${loginCompanyUser.uid}`);
     console.log("clg: Job and CollegeJobLinks created successfully.");
     return res.status(201).json({
       success: true,
       message: "Job created and linked with selected colleges.",
       job: newJob,
     });
-
   } catch (error: any) {
     console.error("clg: Error in createJobByCompany:", error);
     return res.status(500).json({
@@ -177,12 +175,22 @@ for (const c of college) {
   }
 };
 
-
 export const getAllPendingJobRequest = async (req: Request, res: Response) => {
   try {
     // @ts-ignore
     const loginCompanyUser = req.user;
-    
+    const redisKey = `pendingJobs:${loginCompanyUser.uid}`;
+    const cachedJobs = await redis.get(redisKey);
+
+    if (cachedJobs) {
+      return res.status(200).json({
+        success: true,
+        message: "Pending jobs fetched successfully from cache",
+        data: cachedJobs,
+      });
+    }
+    console.log("pending jobs:- ",cachedJobs);
+
     const company = await Company.findOne({ googleId: loginCompanyUser.uid });
     if (!company) {
       return res.status(400).json({
@@ -191,15 +199,16 @@ export const getAllPendingJobRequest = async (req: Request, res: Response) => {
       });
     }
 
-    const pendingJobs = await CollegeJobLink.find({ 
-      status: "pending" 
+    const pendingJobs = await CollegeJobLink.find({
+      status: "pending"
     }).populate({
       path: 'job_info',
       match: { company_name: company._id }
     }).populate('college', 'coll_name');
 
     const filteredJobs = pendingJobs.filter((link: { job_info: null; }) => link.job_info !== null);
-
+    await redis.set(redisKey, JSON.stringify(filteredJobs), { EX: 600 });
+    console.log("pending jobs:- ",filteredJobs);
     return res.status(200).json({
       success: true,
       message: "Pending jobs fetched successfully",
@@ -218,7 +227,18 @@ export const getAllAcceptedJobRequest = async (req: Request, res: Response) => {
   try {
     // @ts-ignore
     const loginCompanyUser = req.user;
-    
+    const redisKey = `acceptedJobs:${loginCompanyUser.uid}`;
+    const cachedJobs = await redis.get(redisKey);
+
+    if (cachedJobs) {
+      return res.status(200).json({
+        success: true,
+        message: "Accepted jobs fetched successfully from cache",
+        data: cachedJobs
+      });
+    }
+    console.log("accepted jobs:- ",cachedJobs);
+
     const company = await Company.findOne({ googleId: loginCompanyUser.uid });
     if (!company) {
       return res.status(400).json({
@@ -227,15 +247,16 @@ export const getAllAcceptedJobRequest = async (req: Request, res: Response) => {
       });
     }
 
-    const acceptedJobs = await CollegeJobLink.find({ 
-      status: "accepted" 
+    const acceptedJobs = await CollegeJobLink.find({
+      status: "accepted"
     }).populate({
       path: 'job_info',
       match: { company_name: company._id }
     }).populate('college', 'coll_name');
 
     const filteredJobs = acceptedJobs.filter((link: { job_info: null; }) => link.job_info !== null);
-
+    await redis.set(redisKey, JSON.stringify(filteredJobs), { EX: 600 });
+    console.log("accepter jobs:-",filteredJobs);
     return res.status(200).json({
       success: true,
       message: "Accepted jobs fetched successfully",
@@ -254,7 +275,18 @@ export const getAllRejectedJobRequest = async (req: Request, res: Response) => {
   try {
     // @ts-ignore
     const loginCompanyUser = req.user;
-    
+    const redisKey = `rejectedJobs:${loginCompanyUser.uid}`;
+    const cachedJobs = await redis.get(redisKey);
+
+    if (cachedJobs) {
+      return res.status(200).json({
+        success: true,
+        message: "Rejected jobs fetched successfully from cache",
+        data: cachedJobs,
+      });
+    }
+    console.log("rejected jobs:- ",cachedJobs);
+
     const company = await Company.findOne({ googleId: loginCompanyUser.uid });
     if (!company) {
       return res.status(400).json({
@@ -263,15 +295,16 @@ export const getAllRejectedJobRequest = async (req: Request, res: Response) => {
       });
     }
 
-    const rejectedJobs = await CollegeJobLink.find({ 
-      status: "rejected" 
+    const rejectedJobs = await CollegeJobLink.find({
+      status: "rejected"
     }).populate({
       path: 'job_info',
       match: { company_name: company._id }
     }).populate('college', 'coll_name');
 
     const filteredJobs = rejectedJobs.filter((link: { job_info: null; }) => link.job_info !== null);
-
+    await redis.set(redisKey, JSON.stringify(filteredJobs), { EX: 600 });
+    console.log("rejected job:- ",filteredJobs);
     return res.status(200).json({
       success: true,
       message: "Rejected jobs fetched successfully",
@@ -286,13 +319,23 @@ export const getAllRejectedJobRequest = async (req: Request, res: Response) => {
   }
 };
 
-export const getjobdetail = async (req: Request, res: Response) => {
+export const getJobDetail = async (req: Request, res: Response) => {
   try {
     const { job_id } = req.params;
     if (!job_id) {
       return res.status(400).json({
         success: false,
         message: "job_id is required"
+      });
+    }
+
+    const redisKey = `jobDetail:${job_id}`;
+    const cachedJobDetail = await redis.get(redisKey);
+
+    if (cachedJobDetail) {
+      return res.status(200).json({
+        success: true,
+        data: cachedJobDetail
       });
     }
 
@@ -305,49 +348,51 @@ export const getjobdetail = async (req: Request, res: Response) => {
     }
 
     const jobDetail: {
-      _id: typeof job._id,
-      job_title: typeof job.job_title,
-      job_description: typeof job.job_description,
-      job_location: typeof job.job_location,
-      job_salary: typeof job.job_salary,
-      rounds: any[]
-    } = {
-      _id: job._id,
-      job_title: job.job_title,
-      job_description: job.job_description,
-      job_location: job.job_location,
-      job_salary: job.job_salary,
-      rounds: []
-    };
+  _id: any;
+  job_title: any;
+  job_description: any;
+  job_location: any;
+  job_salary: any;
+  rounds: any[];
+} = {
+  _id: job._id,
+  job_title: job.job_title,
+  job_description: job.job_description,
+  job_location: job.job_location,
+  job_salary: job.job_salary,
+  rounds: []
+};
+
 
     const rounds = await Round.find({ job_id: job._id }).sort({ round_number: 1 });
-    
+    console.log('rounds:- ',rounds);
+
     const processedRounds = await Promise.all(rounds.map(async (round: { _id: any; round_type: any; round_number: any; }) => {
+      console.log("round:- ",round);
       try {
         const studentLinks = await RoundStudentLink.find({ round_id: round._id })
           .populate({
             path: 'student_id',
-            model: 'Student',  
-            select: 'stud_name stud_department stud_year', 
+            model: 'Student',
+            select: 'stud_name stud_department stud_year',
             populate: {
               path: 'stud_department',
               model: 'Department',
               select: 'dept_name'
             }
           })
-          .lean(); 
+          .lean();
+          console.log(`rounds ${round.round_number}:- `,studentLinks);
 
-        console.log("studentLinks:-", JSON.stringify(studentLinks, null, 2));
 
         const student_list = studentLinks.map((link: { student_id: {}; selected: any; }) => {
-
           const student = (link?.student_id || {}) as {
             _id?: any;
             stud_name?: string;
             stud_department?: string;
             stud_year?: number;
           };
-          
+
           return {
             student_id: student._id || '',
             name: student.stud_name,
@@ -374,19 +419,18 @@ export const getjobdetail = async (req: Request, res: Response) => {
     }));
 
     jobDetail.rounds = processedRounds;
+    await redis.set(redisKey, JSON.stringify(jobDetail), { EX: 600 });
 
     return res.status(200).json({
       success: true,
       data: jobDetail
     });
-
   } catch (error: any) {
-    console.error("Error in getjobdetail:", error);
+    console.error("Error in getJobDetail:", error);
     return res.status(500).json({
       success: false,
-      message: "Error in getjobdetail",
+      message: "Error in getJobDetail",
       error: error.message
     });
   }
 };
-

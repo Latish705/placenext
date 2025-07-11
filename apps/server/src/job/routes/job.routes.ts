@@ -3,8 +3,8 @@ import {
   createJobByCompany, 
   getAllPendingJobRequest, 
   getAllAcceptedJobRequest, 
-  getAllRejectedJobRequest, 
-  getjobdetail
+  getAllRejectedJobRequest,
+  getJobDetail,
 } from "../controller/job";
 import { authenticateToken } from "../../middlewares/verifyGoogleToken";
 
@@ -14,5 +14,5 @@ jobroutes.post('/create', authenticateToken, createJobByCompany);
 jobroutes.get('/pending', authenticateToken, getAllPendingJobRequest);
 jobroutes.get('/accepted', authenticateToken, getAllAcceptedJobRequest);
 jobroutes.get('/rejected', authenticateToken, getAllRejectedJobRequest);
-jobroutes.get('/getjobdetail/:job_id',getjobdetail);
+jobroutes.get('/getjobdetail/:job_id',authenticateToken,getJobDetail);
 export default jobroutes;

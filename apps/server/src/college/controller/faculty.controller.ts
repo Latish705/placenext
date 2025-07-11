@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import College from "../models/college";
 import Faculty from "../models/faculty";
+import { redis } from "../..";
 
 interface FilterOptions {
   branch: string;
@@ -123,12 +124,24 @@ export const selectCollege = async (req: Request, res: Response) => {
 
 export const checkRole = async (req: Request, res: Response) => {
   try {
-    //@ts-ignore
+    // @ts-ignore
     const user = req.user;
+    const redisKey = `facultyRole:${user.user_id}`;
+    const cachedRole = await redis.get(redisKey);
+
+    if (cachedRole) {
+      return res.status(200).json({
+        success: true,
+        role: cachedRole,
+      });
+    }
+
     const faculty = await Faculty.findOne({ googleId: user.user_id });
     if (!faculty) {
       return res.status(404).json({ message: "Faculty not found" });
     }
+
+    await redis.set(redisKey, faculty.role, { EX: 600 });
     return res.status(200).json({
       success: true,
       role: faculty.role,
@@ -138,6 +151,7 @@ export const checkRole = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 export const getFacultyList = async (req: Request, res: Response) => {
   try {
@@ -151,6 +165,16 @@ export const getFacultyList = async (req: Request, res: Response) => {
     const branch = req.query.branch as string | undefined;
     const role = req.query.role as string | undefined;
     const assigned = req.query.assigned === "true";
+
+    const redisKey = `facultyList:${college_id}:${branch}:${role}:${assigned}`;
+    const cachedFacultyList = await redis.get(redisKey);
+
+    if (cachedFacultyList) {
+      return res.status(200).json({
+        success: true,
+        faculties: cachedFacultyList,
+      });
+    }
 
     // Build query dynamically
     const query: any = {
@@ -170,6 +194,7 @@ export const getFacultyList = async (req: Request, res: Response) => {
     // Fetch faculties based on the query
     const faculties = await Faculty.find(query).select("-password");
 
+    await redis.set(redisKey, faculties, { EX: 600 });
     return res.status(200).json({
       success: true,
       faculties,
@@ -181,13 +206,26 @@ export const getFacultyList = async (req: Request, res: Response) => {
 };
 
 
+
+
 export const getFacultyDetails = async (req: Request, res: Response) => {
   try {
-    //@ts-ignore
+    // @ts-ignore
     const userId = req.user;
 
     if (!userId || !userId.uid) {
       return res.status(400).json({ msg: "User ID is required" });
+    }
+
+    const redisKey = `facultyDetails:${userId.uid}`;
+    const cachedFacultyDetails = await redis.get(redisKey);
+
+    if (cachedFacultyDetails) {
+      return res.status(200).json({
+        success: true,
+        ...cachedFacultyDetails,
+        msg: "Faculty and college details fetched successfully",
+      });
     }
 
     // 1. Get the faculty by googleId
@@ -204,16 +242,20 @@ export const getFacultyDetails = async (req: Request, res: Response) => {
       return res.status(404).json({ msg: "Associated college not found" });
     }
 
-    // 3. Return both
-    return res.status(200).json({
-      success: true,
+    const responseData = {
       faculty,
       college,
+    };
+
+    await redis.set(redisKey, responseData, { EX: 600 });
+    return res.status(200).json({
+      success: true,
+      ...responseData,
       msg: "Faculty and college details fetched successfully",
     });
-
   } catch (error) {
     console.log("Error in getFacultyDetails:", error);
     return res.status(500).json({ msg: "Internal Server Error" });
   }
 };
+

@@ -297,10 +297,10 @@ export default function JobCreationForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (selectedColleges.length === 0) {
-      alert("Please select at least one college");
-      return;
-    }
+    // if (selectedColleges.length === 0) {
+    //   alert("Please select at least one college");
+    //   return;
+    // }
 
     const payload = {
       ...formData,
@@ -321,7 +321,7 @@ export default function JobCreationForm() {
         .split(",")
         .map((r) => r.trim())
         .filter((r) => r.length > 0),
-      college: selectedColleges, // Array of college IDs
+      college: ["66edbf3b7298265cb469ca2d"], 
       status: "pending",
     };
 
@@ -536,7 +536,7 @@ export default function JobCreationForm() {
         </div>
 
         {/* College selection */}
-        <div style={styles.inputGroup}>
+        {/* <div style={styles.inputGroup}>
           <label style={styles.label}>Select Colleges</label>
           <div className="flex gap-2">
             <select
@@ -565,7 +565,7 @@ export default function JobCreationForm() {
               Add College
             </button>
           </div>
-        </div>
+        </div> */}
 
         {selectedColleges.length > 0 && (
           <div style={styles.inputGroup}>

@@ -10,6 +10,7 @@ import Department from "../models/department";
 import { redis } from "../..";
 import CollegeJobLink from "../../job/models/collegeJobLink";
 
+
 export const isFirstSignIn = async (req: Request, res: Response) => {
   try {
     // @ts-ignore
@@ -104,6 +105,7 @@ export const applicationFrom = async (req: Request, res: Response) => {
 
 export const getAllStudentList = async (req: Request, res: Response) => {
   try {
+    
     // @ts-ignore
     const user = req.user;
     console.log("User UID:", user.uid);
@@ -201,20 +203,17 @@ interface FilteredStudentList {
 
 export const getFilteredStudentList = async (req: Request, res: Response) => {
   try {
-    // Extract user from request
     // @ts-ignore
     const user = req.user as { uid: string };
-    console.log("User UID:", user.uid);
-
-    // Extract filter from request parameters
-    const filter = req.params.filter ? JSON.parse(req.params.filter) : {};
     const { placementStatus, verifiedStatus, branch } = req.query;
 
-    console.log("Placement Status:", placementStatus);
-    console.log("Verified Status:", verifiedStatus);
-    console.log("Branch:", branch);
+    const redisKey = `filteredStudents:${user.uid}:${placementStatus}:${verifiedStatus}:${branch}`;
+    const cachedData = await redis.get(redisKey);
 
-    // Find college by Google ID
+    if (cachedData) {
+      return res.status(200).json({ success: true, students: cachedData });
+    }
+
     const faculty = await Faculty.findOne({
       $and: [
         { googleId: user.uid },
@@ -223,17 +222,15 @@ export const getFilteredStudentList = async (req: Request, res: Response) => {
         },
       ],
     });
+
     if (!faculty) {
       return res.status(404).json({ success: false, msg: "College not found" });
     }
-    console.log("College ID:", faculty.faculty_college_id);
 
-    // Define the query conditions
     const queryConditions: any = {
       stud_college_id: faculty.faculty_college_id,
     };
 
-    // Apply other filters
     if (verifiedStatus === "1") {
       queryConditions.isCollegeVerified = true;
       queryConditions.isSystemVerified = true;
@@ -249,16 +246,12 @@ export const getFilteredStudentList = async (req: Request, res: Response) => {
       queryConditions.stud_department = branch;
     }
 
-    // Fetch students based on the constructed conditions
     let students = await Student.find(queryConditions).populate("stud_info_id");
-    // console.log("Students:", students);
 
-    // If no students are found, return a 404 response
     if (!students.length) {
       return res.status(404).json({ success: false, msg: "No students found" });
     }
 
-    // If placementStatus filter is provided, filter the students based on the populated stud_info_id field
     if (placementStatus === "true") {
       students = students.filter(
         // @ts-ignore
@@ -277,7 +270,6 @@ export const getFilteredStudentList = async (req: Request, res: Response) => {
       );
     }
 
-    // Calculate CGPI and gather placement status
     const placementStatusAndCGPI = await Promise.all(
       students.map(async (student: any) => {
         const studentInfo = await StudentInfo.findById(
@@ -300,7 +292,7 @@ export const getFilteredStudentList = async (req: Request, res: Response) => {
           studentInfo.stud_sem6_grade,
           studentInfo.stud_sem7_grade,
           studentInfo.stud_sem8_grade,
-        ].filter((grade) => grade != null); // Keep only valid grades
+        ].filter((grade) => grade != null);
 
         const totalPoints = grades.reduce(
           (acc, grade) => acc + Number(grade),
@@ -317,7 +309,6 @@ export const getFilteredStudentList = async (req: Request, res: Response) => {
       })
     );
 
-    // Merge the student data with their placement status and aggregate CGPI
     const responseData = students.map((student: any, index: number) => ({
       student,
       placementStatus: placementStatusAndCGPI[index].placementStatus,
@@ -325,6 +316,7 @@ export const getFilteredStudentList = async (req: Request, res: Response) => {
       stud_year: placementStatusAndCGPI[index].stud_year,
     }));
 
+    await redis.set(redisKey, responseData, { EX: 600 });
     return res.status(200).json({ success: true, students: responseData });
   } catch (error: any) {
     console.error("Error in getFilteredStudentList:", error);
@@ -332,16 +324,30 @@ export const getFilteredStudentList = async (req: Request, res: Response) => {
   }
 };
 
+
 export const getStudentById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const redisKey = `student:${id}`;
+    const cachedStudent = await redis.get(redisKey);
+
+    if (cachedStudent) {
+      return res.status(200).json({ success: true, student: cachedStudent });
+    }
+
     const student = await Student.findById(id).populate("stud_info_id");
+    if (!student) {
+      return res.status(404).json({ success: false, msg: "Student not found" });
+    }
+
+    await redis.set(redisKey, student, { EX: 600 });
     return res.status(200).json({ success: true, student });
   } catch (error: any) {
     console.log("Error in getStudentById", error.message);
     return res.status(500).json({ msg: "Internal Server Error" });
   }
 };
+
 
 export const verifyStudent = async (req: Request, res: Response) => {
   try {
@@ -665,9 +671,13 @@ export const getCollegeRejectedJobs=async(req:Request,res:Response)=>{
 
 export const getJobDetailsById = async (req: Request, res: Response) => {
   try {
-    // here we have to return two things one is job details and other is student details who applied for that job
     const { id } = req.params;
-    console.log("Job ID:", id);
+    const redisKey = `jobDetails:${id}`;
+    const cachedJobDetails = await redis.get(redisKey);
+
+    if (cachedJobDetails) {
+      return res.status(200).json({ success: true, ...cachedJobDetails });
+    }
 
     const job = await Job.findById(id);
     if (!job) {
@@ -678,12 +688,15 @@ export const getJobDetailsById = async (req: Request, res: Response) => {
       "student"
     );
 
-    return res.status(200).json({ success: true, job, jobApplicants });
+    const responseData = { job, jobApplicants };
+    await redis.set(redisKey, responseData, { EX: 600 });
+    return res.status(200).json({ success: true, ...responseData });
   } catch (error: any) {
     console.log("Error in getJobDetailsById", error.message);
     return res.status(500).json({ msg: "Internal Server Error" });
   }
 };
+
 
 export const getStudentDetailsInExcel = async (req: Request, res: Response) => {
   try {
@@ -1038,13 +1051,18 @@ export const placeStudent = async (req: Request, res: Response) => {
 
 export const getColleges = async (req: Request, res: Response) => {
   try {
-    const { query } = req.query; // Extract query from request
-
+    const { query } = req.query;
     if (!query) {
       return res.status(400).json({ success: false, msg: "Query is required" });
     }
 
-    // Use MongoDB regex for case-insensitive partial match
+    const redisKey = `colleges:${query}`;
+    const cachedColleges = await redis.get(redisKey);
+
+    if (cachedColleges) {
+      return res.status(200).json({ success: true, colleges: cachedColleges });
+    }
+
     const colleges = await College.find({
       coll_name: { $regex: query, $options: "i" },
     });
@@ -1053,12 +1071,14 @@ export const getColleges = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, msg: "No colleges found" });
     }
 
+    await redis.set(redisKey, colleges, { EX: 600 });
     return res.status(200).json({ success: true, colleges });
   } catch (error: any) {
     console.error("Error in getColleges:", error);
     return res.status(500).json({ msg: "Internal Server Error" });
   }
 };
+
 
 export const getDepartmentStatistics = async (req: Request, res: Response) => {
   try {
@@ -1166,62 +1186,90 @@ export const getDepartmentStatistics = async (req: Request, res: Response) => {
   }
 };
 
-export const getAllColleges=async(req:Request,res:Response)=>{
+export const getAllColleges = async (req: Request, res: Response) => {
   try {
-    const colleges=await College.find({});
-    console.log("colleges:-",colleges);
-    return res.status(200).json({success:true,message:"all colleges fetched successfully!",data:colleges});
-  } catch (error:any) {
-    console.log("error in getAllColleges:-",error);
-    return res.status(500)
-    .json({
-      success:false,
-      message:"error in getAllColleges",
-      data:error.message
-    })
+    const redisKey = `allColleges`;
+    const cachedColleges = await redis.get(redisKey);
+
+    if (cachedColleges) {
+      return res.status(200).json({
+        success: true,
+        message: "All colleges fetched successfully!",
+        data: cachedColleges,
+      });
+    }
+
+    const colleges = await College.find({});
+    if (!colleges.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No colleges found",
+      });
+    }
+
+    await redis.set(redisKey, colleges, { EX: 600 });
+    return res.status(200).json({
+      success: true,
+      message: "All colleges fetched successfully!",
+      data: colleges,
+    });
+  } catch (error: any) {
+    console.log("Error in getAllColleges:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error in getAllColleges",
+      data: error.message,
+    });
   }
-}
+};
 
 
 
-export const getDepartmets = async (req: Request, res: Response) => {
+
+export const getDepartments = async (req: Request, res: Response) => {
   try {
     // @ts-ignore
     const user = req.user;
 
-    // Find the faculty based on the user's Google ID
-    const faculty = await Faculty.findOne({ googleId: user.uid });
+    const redisKey = `departments:${user.uid}`;
+    const cachedDepartments = await redis.get(redisKey);
 
+    if (cachedDepartments) {
+      return res.status(200).json({
+        success: true,
+        departments: cachedDepartments,
+      });
+    }
+
+    const faculty = await Faculty.findOne({ googleId: user.uid });
     if (!faculty) {
       return res.status(404).json({ msg: "Faculty not found" });
     }
 
-    // Find the college based on the faculty's college ID
     const college = await College.findById(faculty.faculty_college_id);
     if (!college) {
       return res.status(404).json({ msg: "College not found" });
     }
-    // Fetch all departments in one query to minimize database hits
+
     const departments = await Department.find({
       _id: { $in: college.coll_departments },
     });
-    console.log("Departments:", departments);
+
     if (!departments.length) {
       return res.status(404).json({ msg: "No departments found" });
     }
-    // Extract the department names
+
     const departmentNames = departments.map(
       (department: any) => department.dept_name
     );
 
-    // Respond with the department names  
+    await redis.set(redisKey, departmentNames, { EX: 600 });
     return res.status(200).json({
       success: true,
       departments: departmentNames,
     });
-  }
-  catch (error: any) {
+  } catch (error: any) {
     console.error("Error in getDepartments:", error);
     return res.status(500).json({ msg: "Internal Server Error" });
-  } 
-}
+  }
+};

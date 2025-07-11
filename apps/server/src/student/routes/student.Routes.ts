@@ -9,7 +9,7 @@ import {
   getJobAppliedDetailsById,
   getJobDetailsById,
   getJobForCollege,
-  getRecommededJobs,
+  getRecommendedJobs,
   getStudentsJobStatistics,
   getStudentStatistics,
   getUserDetails,
@@ -17,7 +17,7 @@ import {
   signup,
 } from "../controller/auth";
 import { upload } from "../../middlewares/multer";
-import { getDeparments } from "../controller/student.controller";
+import { getDepartments } from "../controller/student.controller";
 
 const studentRoutes = Router();
 
@@ -73,13 +73,13 @@ studentRoutes.get(
 studentRoutes.get("/companies", authenticateToken, getJobForCollege);
 studentRoutes.get("/company/:id", authenticateToken, getJobDetailsById);
 studentRoutes.get("/applied_jobs", authenticateToken, getJobAppliedByStudent);
-studentRoutes.get("/recommended_jobs", authenticateToken, getRecommededJobs);
+studentRoutes.get("/recommended_jobs", authenticateToken, getRecommendedJobs);
 studentRoutes.get(
   "/applied_jobs/:id",
   authenticateToken,
   getJobAppliedDetailsById
 );
-studentRoutes.post("/department", authenticateToken, getDeparments);
+studentRoutes.post("/department", authenticateToken, getDepartments);
 
 // student applying to job
 studentRoutes.post(

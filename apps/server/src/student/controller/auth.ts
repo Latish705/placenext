@@ -9,6 +9,8 @@ import { Document_server_url } from "../../app";
 import Job, { IJob } from "../../job/models/job";
 import Application from "../models/application";
 import { jobs } from "googleapis/build/src/apis/jobs";
+import { redis } from "../..";
+
 const requiredFields = [
   "firstName",
   "middleName",
@@ -17,7 +19,6 @@ const requiredFields = [
   "phoneNumber",
   "dateOfBirth",
   "courseType",
-  // "year",
   "departmentName",
   "address",
   "college",
@@ -26,21 +27,17 @@ const requiredFields = [
   "sscBoard",
   "alternateEmail",
   "alternatePhoneNo",
-  // "capAllotment",
-  // "photoWithSignature",
-  // "gapCertificate",
   "aadharNumber",
   "panNumber",
   "liveBacklogs",
   "deadBacklogs",
   "placementStatus",
-  "skills", 
+  "skills",
   "linkedIn",
   "github",
   "collegeId",
 ];
 
-// Helper function to upload file and handle errors
 const uploadMarksheet = async (file: any, label: string) => {
   if (file && Array.isArray(file) && file.length > 0) {
     const filePath = file[0].path;
@@ -50,14 +47,7 @@ const uploadMarksheet = async (file: any, label: string) => {
 };
 
 const validateFields = (fields: any) => {
-  requiredFields.forEach((field) => {
-    if (!fields[field]) {
-      console.log("Field is missing:", field);
-
-      return true;
-    }
-  });
-  return requiredFields.some((field) => fields[field] === "");
+  return requiredFields.some((field) => !fields[field]);
 };
 
 export const signup = async (req: Request, res: Response) => {
@@ -76,11 +66,9 @@ export const isFirstSignIn = async (req: Request, res: Response) => {
     // @ts-ignore
     const user = req.user;
     const student = await Student.findOne({ googleId: user.uid });
-
     if (!student) {
       return res.status(200).json({ success: true, isFirstSignIn: true });
     }
-
     // @ts-ignore
     if (student.stud_info_id == null) {
       return res.status(200).json({ success: true, isFirstSignIn: true });
@@ -94,44 +82,38 @@ export const isFirstSignIn = async (req: Request, res: Response) => {
 
 export const applicationFrom = async (req: Request, res: Response) => {
   try {
-    console.log("req body:-" ,req);
+    console.log("req body:-", req.body);
     // @ts-ignore
     const user = req.user;
-
     const fields = req.body;
 
-    // Validate required fields
     if (validateFields(fields)) {
       return res.status(400).json({ msg: "All fields are required" });
     }
 
-    // Check if user already exists
     const existingUser = await Student.findOne({ stud_email: fields.email });
     if (existingUser) {
-      return res
-        .status(400)
-        .json({ success: false, msg: "User already exists" });
+      return res.status(400).json({ success: false, msg: "User already exists" });
     }
 
-    // Upload marksheets
     const marksheetPromises = [
-      // @ts-ignore
+      //@ts-ignore
       uploadMarksheet(req.files?.sem1Marksheet, "sem1Marksheet"),
-      // @ts-ignore
+      //@ts-ignore
       uploadMarksheet(req.files?.sem2Marksheet, "sem2Marksheet"),
-      // @ts-ignore
+      //@ts-ignore
       uploadMarksheet(req.files?.sem3Marksheet, "sem3Marksheet"),
-      // @ts-ignore
+      //@ts-ignore
       uploadMarksheet(req.files?.sem4Marksheet, "sem4Marksheet"),
-      // @ts-ignore
+      //@ts-ignore
       uploadMarksheet(req.files?.sem5Marksheet, "sem5Marksheet"),
-      // @ts-ignore
+      //@ts-ignore
       uploadMarksheet(req.files?.sem6Marksheet, "sem6Marksheet"),
-      // @ts-ignore
+      //@ts-ignore
       uploadMarksheet(req.files?.sem7Marksheet, "sem7Marksheet"),
-      // @ts-ignore
+      //@ts-ignore
       uploadMarksheet(req.files?.sem8Marksheet, "sem8Marksheet"),
-      // @ts-ignore
+      //@ts-ignore
       uploadMarksheet(req.files?.resume, "resume"),
     ];
 
@@ -148,7 +130,6 @@ export const applicationFrom = async (req: Request, res: Response) => {
     ] = await Promise.all(marksheetPromises);
 
     const studentInfo = new StudentInfo({
-      // stud_resume: fields.resume, // this is remaining
       stud_addmission_year: fields.admissionYear,
       stud_sem1_grade: fields.sem1CGPI,
       stud_sem2_grade: fields.sem2CGPI,
@@ -167,33 +148,20 @@ export const applicationFrom = async (req: Request, res: Response) => {
       stud_sem7_marksheet: sem7sheet,
       stud_sem8_marksheet: sem8sheet,
       stud_cet: fields.cet,
-      // stud_jee: fields.jee, // this is remaining
       stud_hsc: fields.twelfthPercentage,
       stud_hsc_board: fields.hscBoard,
       stud_ssc: fields.tenthPercentage,
       stud_ssc_board: fields.sscBoard,
       stud_resume: resume,
-      // stud_diploma: fields.diploma, // this is remaining
-      // stud_diploma_board: fields.diplomaBoard, // this is remaining
-      // stud_diploma_stream: fields.diplomaStream, // this is remaining
       stud_prn: fields.prn,
       stud_alternate_email: fields.alternateEmail,
       stud_alternate_phone: fields.alternatePhoneNo,
-      // stud_capAllotment: fields.capAllotment, // this is remaining
-      // stud_photoWithSignature: fields.photoWithSignature, // this is remaining
-      // stud_gapCertificate: fields.gapCertificate, // this is remaining
       stud_aadhar: fields.aadharNumber,
       stud_pan: fields.panNumber,
-      // handicap_cert: fields.handicapCert, // this is remaining
       no_of_live_backlogs: fields.liveBacklogs,
       no_of_dead_backlogs: fields.deadBacklogs,
-      // stud_placement_status: fields.placementStatus, // this is remaining
-      // stud_placement_package: fields.placementPackage, // this is remaining
-      // stud_placement_company: fields.placementCompany, // this is remaining
-      // stud_placement_date: fields.placementDate, // this is remaining
-      // student_skills: fields.skills, // this is remaining
-      stud_linkedIn: fields.linkedIn, // this is remaining
-      stud_github: fields.github, // this is remaining
+      stud_linkedIn: fields.linkedIn,
+      stud_github: fields.github,
     });
 
     const savedStudentInfo = await studentInfo.save();
@@ -205,7 +173,6 @@ export const applicationFrom = async (req: Request, res: Response) => {
       stud_phone: fields.phoneNumber,
       stud_dob: fields.dateOfBirth,
       stud_course: fields.courseType,
-      // stud_year: fields.year, // this is remaining
       stud_department: fields.departmentName,
       stud_college_id: fields.college,
       googleId: user.uid,
@@ -213,23 +180,20 @@ export const applicationFrom = async (req: Request, res: Response) => {
     });
 
     const savedStudent = await student.save();
-
-    console.log(
-      "Application From Submitted Successfully by Student",
-      savedStudent.id
-    );
+    console.log("Application From Submitted Successfully by Student", savedStudent.id);
 
     const doc_res = await axios.post(`${Document_server_url}/verify_user`, {
       userId: savedStudent.id,
     });
+
     if (doc_res.data.success) {
-      console.log("User added for verified successfully");
+      console.log("User added for verification successfully");
     }
 
     return res.status(200).json({
       success: true,
       student: savedStudent,
-      message: "Application From Submitted Successfully",
+      message: "Application Form Submitted Successfully",
     });
   } catch (error: any) {
     console.log("Error in applicationFrom", error.message);
@@ -239,21 +203,25 @@ export const applicationFrom = async (req: Request, res: Response) => {
 
 export const getAllCollegeList = async (req: Request, res: Response) => {
   try {
-    const colleges = await College.find({}, "coll_name");
+    const redisKey = `collegeList`;
+    const cachedColleges = await redis.get(redisKey);
 
+    if (cachedColleges) {
+      return res.status(200).json({ success: true, colleges:cachedColleges});
+    }
+
+    const colleges = await College.find({}, "coll_name");
     const collegeList = colleges.map((college: any) => ({
       id: college._id,
       name: college.coll_name,
     }));
 
+    await redis.set(redisKey, JSON.stringify(collegeList), { EX: 600 });
+
     return res.status(200).json({ success: true, colleges: collegeList });
   } catch (error: any) {
     console.error("Error in getAllCollegeList:", error.stack || error.message);
-
-    // Return a standardized error response
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal Server Error" });
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 
@@ -261,25 +229,31 @@ export const getUserDetails = async (req: Request, res: Response) => {
   try {
     // @ts-ignore
     const user = req.user;
-    const student = await Student.findOne({ googleId: user.uid }).populate(
-      "stud_info_id stud_college_id"
-    );
+    const redisKey = `studentDetails:${user.uid}`;
+    const cachedStudent = await redis.get(redisKey);
+
+    if (cachedStudent) {
+      return res.status(200).json({ success: true, student: cachedStudent});
+    }
+
+    const student = await Student.findOne({ googleId: user.uid }).populate("stud_info_id stud_college_id");
 
     if (!student) {
       return res.status(404).json({ success: false, msg: "Student not found" });
     }
 
+    await redis.set(redisKey, JSON.stringify(student), { EX: 600 });
+
     return res.status(200).json({ success: true, student });
   } catch (error: any) {
     console.log("Error in getUserDetails", error.message);
+    return res.status(500).json({ msg: "Internal Server Error" });
   }
 };
 
 export const updateUserDetails = async (req: Request, res: Response) => {
-  //@ts-ignore
-  const { userId } = req.user; // Assuming userId is extracted from token in authenticateToken middleware
-
-  // Extract new data from the request body
+  // @ts-ignore
+  const { userId } = req.user;
   const {
     firstName,
     middleName,
@@ -320,73 +294,34 @@ export const updateUserDetails = async (req: Request, res: Response) => {
   } = req.body;
 
   try {
-    // Find the student by userId
     let student = await Student.findOne({ _id: userId });
 
     if (!student) {
-      return res.status(404).json({
-        success: false,
-        message: "Student not found",
-      });
+      return res.status(404).json({ success: false, message: "Student not found" });
     }
 
-    // Update the student's profile information
     student.stud_name = firstName || student.stud_name;
-    // student.middleName = middleName || student.middleName;
-    // student.lastName = lastName || student.lastName;
-    // student.gender = gender || student.gender;
-    // student.fatherName = fatherName || student.fatherName;
-    // student.motherName = motherName || student.motherName;
-    // student.rollNumber = rollNumber || student.rollNumber;
-    // student.division = division || student.division;
-    // student.dateOfBirth = dateOfBirth || student.dateOfBirth;
-    // student.email = email || student.email;
-    // student.alternateEmail = alternateEmail || student.alternateEmail;
-    // student.aadharNumber = aadharNumber || student.aadharNumber;
-    // student.phoneNumber = phoneNumber || student.phoneNumber;
-    // student.alternatePhoneNo = alternatePhoneNo || student.alternatePhoneNo;
-    // student.panNumber = panNumber || student.panNumber;
-    // student.address = address || student.address;
-    // student.state = state || student.state;
-    // student.country = country || student.country;
-    // student.pincode = pincode || student.pincode;
-    // student.courseType = courseType || student.courseType;
-    // student.admissionYear = admissionYear || student.admissionYear;
-    // student.departmentName = departmentName || student.departmentName;
-    // student.tenthPercentage = tenthPercentage || student.tenthPercentage;
-    // student.hscBoard = hscBoard || student.hscBoard;
-    // student.twelfthPercentage = twelfthPercentage || student.twelfthPercentage;
-    // student.sscBoard = sscBoard || student.sscBoard;
-    // student.cet = cet || student.cet;
-    // student.sem1CGPI = sem1CGPI || student.sem1CGPI;
-    // student.sem2CGPI = sem2CGPI || student.sem2CGPI;
-    // student.sem3CGPI = sem3CGPI || student.sem3CGPI;
-    // student.sem4CGPI = sem4CGPI || student.sem4CGPI;
-    // student.sem5CGPI = sem5CGPI || student.sem5CGPI;
-    // student.sem6CGPI = sem6CGPI || student.sem6CGPI;
-    // student.sem7CGPI = sem7CGPI || student.sem7CGPI;
-    // student.sem8CGPI = sem8CGPI || student.sem8CGPI;
-    // student.college = college || student.college;
-
     student.stud_phone = phoneNumber || student.stud_phone;
     student.stud_email = email || student.stud_email;
     student.stud_address = address || student.stud_address;
     student.stud_dob = dateOfBirth || student.stud_dob;
     student.stud_course = courseType || student.stud_course;
     student.stud_department = departmentName || student.stud_department;
-    // student.stud_college_id = college || student.stud_college_id;
     student.stud_year = admissionYear || student.stud_year;
-    // Save the updated profile to the database
+
     await student.save();
 
-    res.json({
+    // Clear related caches
+    await redis.del(`studentDetails:${userId}`);
+
+    return res.json({
       success: true,
       message: "Profile updated successfully",
       student,
     });
   } catch (error) {
     console.error("Error updating profile: ", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Server error while updating profile",
     });
@@ -396,36 +331,38 @@ export const updateUserDetails = async (req: Request, res: Response) => {
 export const getStudentStatistics = async (req: Request, res: Response) => {
   try {
     console.log("Inside getStudentStatistics");
-
     // @ts-ignore
     const user = req.user;
-    const student = await Student.findOne({ googleId: user.uid }).populate(
-      "stud_info_id"
-    );
-    //@ts-ignore
-    const appliedJobs = await Application.find({ student: student?._id });
+    const redisKey = `studentStatistics:${user.uid}`;
+    const cachedData = await redis.get(redisKey);
+
+    if (cachedData) {
+      return res.status(200).json({ success: true, ...cachedData });
+    }
+
+    const student = await Student.findOne({ googleId: user.uid }).populate("stud_info_id");
 
     if (!student) {
       return res.status(404).json({ success: false, msg: "Student not found" });
     }
+
+    const appliedJobs = await Application.find({ student: student?._id });
+
     if (appliedJobs.length === 0) {
-      return res.status(200).json({ success: true, student, appliedJobs: [] });
+      const data = { success: true, student, appliedJobs: [] };
+      await redis.set(redisKey, JSON.stringify(data), { EX: 600 });
+      return res.status(200).json(data);
     }
 
-    const companiesCameToCollege = await Job.find({
-      college: student.stud_college_id,
-    });
+    const companiesCameToCollege = await Job.find({ college: student.stud_college_id });
 
-    console.log(
-      "Student statistics fetched successfully from student with id :",
-      student._id
-    );
+    const data = { success: true, appliedJobs, companiesCameToCollege };
+    await redis.set(redisKey, JSON.stringify(data), { EX: 600 });
 
-    return res
-      .status(200)
-      .json({ success: true, appliedJobs, companiesCameToCollege });
+    return res.status(200).json(data);
   } catch (error: any) {
     console.log("Error in getStudentStatistics", error.message);
+    return res.status(500).json({ success: false, msg: "Internal Server Error" });
   }
 };
 
@@ -433,25 +370,25 @@ export const getJobForCollege = async (req: Request, res: Response) => {
   try {
     // @ts-ignore
     const user = req.user;
-    const student = await Student.findOne({ googleId: user.uid }).populate(
-      "stud_department"
-    );
+    const redisKey = `jobsForCollege:${user.uid}`;
+    const cachedJobs = await redis.get(redisKey);
+
+    if (cachedJobs) {
+      return res.status(200).json({ success: true, ...cachedJobs});
+    }
+
+    const student = await Student.findOne({ googleId: user.uid }).populate("stud_department");
 
     if (!student) {
       return res.status(404).json({ success: false, msg: "Student not found" });
     }
 
-    const studentInfo = await StudentInfo.findOne({
-      _id: student.stud_info_id,
-    });
+    const studentInfo = await StudentInfo.findOne({ _id: student.stud_info_id });
 
     if (!studentInfo) {
-      return res
-        .status(404)
-        .json({ success: false, msg: "Student info not found" });
+      return res.status(404).json({ success: false, msg: "Student info not found" });
     }
 
-    // Calculate the average CGPI
     const grades = [
       studentInfo.stud_sem1_grade,
       studentInfo.stud_sem2_grade,
@@ -463,63 +400,36 @@ export const getJobForCollege = async (req: Request, res: Response) => {
       studentInfo.stud_sem8_grade,
     ];
 
-    // Print grades for debugging
-    // console.log("Grades:", grades);
-
-    // Ensure grades are numbers and ignore empty strings
-    let validSemesters = 0;
-    const totalGrades = grades.reduce((sum: any, grade: any) => {
-      // Check if the grade is a valid number or a non-empty string that can be converted to a number
+    const totalGrades = grades.reduce((sum, grade) => {
       return grade !== "" && !isNaN(Number(grade)) ? sum + Number(grade) : sum;
     }, 0);
 
-    // Count valid semesters (where the grade is not an empty string and can be converted to a number)
-    validSemesters = grades.filter(
-      (grade) => grade !== "" && grade !== null && !isNaN(Number(grade))
-    ).length;
-
-    // Calculate the average CGPI, avoiding division by zero
+    const validSemesters = grades.filter(grade => grade !== "" && grade !== null && !isNaN(Number(grade))).length;
     const averageCGPI = validSemesters > 0 ? totalGrades / validSemesters : 0;
 
-    // console.log("averageCGPI", averageCGPI);
-
-    // Fetch all jobs posted at the student's college
-    const jobs = await Job.find({
-      college: student.stud_college_id,
-    });
+    const jobs = await Job.find({ college: student.stud_college_id });
 
     if (!jobs.length) {
-      return res
-        .status(400)
-        .json({ success: false, student, message: "No Jobs Found" });
+      return res.status(400).json({ success: false, student, message: "No Jobs Found" });
     }
-    //can we print reasone for not eligible
 
-    // Determine eligibility for each job
     const jobsWithEligibility = jobs.map((job: any) => {
       const isEligible =
         studentInfo.no_of_dead_backlogs <= job.max_no_dead_kt &&
         studentInfo.no_of_live_backlogs <= job.max_no_live_kt &&
-        averageCGPI >= job.min_CGPI && // Use average CGPI
-        //@ts-ignore
+        averageCGPI >= job.min_CGPI &&
         job.branch_allowed.includes(student?.stud_department?.dept_name);
-      // job.passing_year.includes(student.stud_year);
-      // console.log("isEligible", isEligible);
 
-      return {
-        ...job.toObject(), // Convert the job document to a plain object
-        isEligible, // Add eligibility status
-      };
+      return { ...job.toObject(), isEligible };
     });
 
-    return res
-      .status(200)
-      .json({ success: true, student, jobs: jobsWithEligibility });
+    const data = { success: true, student, jobs: jobsWithEligibility };
+    await redis.set(redisKey, JSON.stringify(data), { EX: 600 });
+
+    return res.status(200).json(data);
   } catch (error: any) {
     console.error("Error in getJobForCollege", error.message);
-    return res
-      .status(500)
-      .json({ success: false, msg: "Internal Server Error" });
+    return res.status(500).json({ success: false, msg: "Internal Server Error" });
   }
 };
 
@@ -528,33 +438,31 @@ export const getJobDetailsById = async (req: Request, res: Response) => {
     // @ts-ignore
     const user = req.user;
     const { id } = req.params;
+    const redisKey = `jobDetails:${id}`;
+    const cachedJobDetails = await redis.get(redisKey);
 
-    // Find the job by ID
+    if (cachedJobDetails) {
+      return res.status(200).json({ success: true, ...cachedJobDetails });
+    }
+
     const job = await Job.findById(id);
+
     if (!job) {
       return res.status(404).json({ success: false, msg: "Job not found" });
     }
-    // console.log("Job", job);
 
-    // Find the student using their Google ID
-    const student = await Student.findOne({ googleId: user.uid }).populate(
-      "stud_department"
-    );
+    const student = await Student.findOne({ googleId: user.uid }).populate("stud_department");
+
     if (!student) {
       return res.status(404).json({ success: false, msg: "Student not found" });
     }
 
-    // Find student info using student ID
-    const studentInfo = await StudentInfo.findOne({
-      _id: student.stud_info_id,
-    });
+    const studentInfo = await StudentInfo.findOne({ _id: student.stud_info_id });
+
     if (!studentInfo) {
-      return res
-        .status(404)
-        .json({ success: false, msg: "Student info not found" });
+      return res.status(404).json({ success: false, msg: "Student info not found" });
     }
 
-    // Calculate the average CGPI
     const grades = [
       studentInfo.stud_sem1_grade,
       studentInfo.stud_sem2_grade,
@@ -566,47 +474,26 @@ export const getJobDetailsById = async (req: Request, res: Response) => {
       studentInfo.stud_sem8_grade,
     ];
 
-    // Print grades for debugging
-    // console.log("Grades:", grades);
-
-    // Calculate total grades and valid semesters
-    let validSemesters = 0;
     const totalGrades = grades.reduce((sum, grade) => {
-      if (grade !== "" && !isNaN(Number(grade))) {
-        return sum + Number(grade);
-      }
-      return sum;
+      return grade !== "" && !isNaN(Number(grade)) ? sum + Number(grade) : sum;
     }, 0);
-    // Count valid semesters (where the grade is not an empty string and can be converted to a number)
-    validSemesters = grades.filter(
-      (grade) => grade !== "" && grade !== null && !isNaN(Number(grade))
-    ).length;
-    // console.log("totalGrades", totalGrades);
-    // console.log("validSemesters", validSemesters);
 
-    // Calculate average CGPI, avoiding division by zero
+    const validSemesters = grades.filter(grade => grade !== "" && grade !== null && !isNaN(Number(grade))).length;
     const averageCGPI = validSemesters > 0 ? totalGrades / validSemesters : 0;
-    // console.log("averageCGPI", averageCGPI);
 
-    // Determine eligibility for the specific job
     const isEligible =
       studentInfo.no_of_dead_backlogs <= job.max_no_dead_kt &&
       studentInfo.no_of_live_backlogs <= job.max_no_live_kt &&
       averageCGPI >= job.min_CGPI &&
-      //@ts-ignore
       job.branch_allowed.includes(student?.stud_department?.dept_name);
 
-    // console.log("isEligible", isEligible);
+    const data = { success: true, job: { ...job.toObject(), isEligible } };
+    await redis.set(redisKey, JSON.stringify(data), { EX: 600 });
 
-    // Return the job details along with eligibility status
-    return res
-      .status(200)
-      .json({ success: true, job: { ...job.toObject(), isEligible } });
+    return res.status(200).json(data);
   } catch (error: any) {
     console.error("Error in getJobDetailsById", error.message);
-    return res
-      .status(500)
-      .json({ success: false, msg: "Internal Server Error" });
+    return res.status(500).json({ success: false, msg: "Internal Server Error" });
   }
 };
 
@@ -630,14 +517,11 @@ export const authStudent = async (req: Request, res: Response) => {
 export const applyToJob = async (req: Request, res: Response) => {
   try {
     // @ts-ignore
-    const user = req.user as any; // Explicitly type 'req.user'
+    const user = req.user;
     const student = await Student.findOne({ googleId: user.uid });
-
-    // Destructure job details from the request body
     const { app_job_id, app_status } = req.body;
 
     const application = await Application.findOne({
-      // @ts-ignore
       student: student._id,
       app_job_id,
     });
@@ -648,46 +532,39 @@ export const applyToJob = async (req: Request, res: Response) => {
         msg: "You have already applied to this job",
       });
     }
-    // Validate required fields
+
     if (!app_job_id) {
       return res.status(400).json({ msg: "All fields are required" });
     }
 
-    // Ensure that the student exists
     if (!student) {
       return res.status(404).json({ success: false, msg: "Student not found" });
     }
 
-    // Ensure that the job exists
     const job = await Job.findOne({ _id: app_job_id });
+
     if (!job) {
       return res.status(404).json({ success: false, msg: "Job not found" });
     }
 
-    // Handle file upload (check if the file exists and isn't empty)
     let uploadedCoverLetter;
     if (req.file) {
-      // Upload cover letter to Google Drive
       uploadedCoverLetter = await uploadToGoogleDrive(req.file.path);
     }
 
-    // Create and save a new job application
     const newApplication = new Application({
-      app_cover_letter: uploadedCoverLetter || "", // Use empty string if no file uploaded
+      app_cover_letter: uploadedCoverLetter || "",
       app_job_id,
       student: student._id,
       app_status,
     });
 
     const savedApplication = await newApplication.save();
-    console.log(
-      "Application Submitted Successfully for job applicationId:",
-      savedApplication.id + " by studentId:",
-      student.id + " for jobId:",
-      job.id
-    );
+    console.log("Application Submitted Successfully for job applicationId:", savedApplication.id, "by studentId:", student.id, "for jobId:", job.id);
 
-    // Return success response
+    // Clear related caches
+    await redis.del(`studentStatistics:${user.uid}`);
+
     return res.status(200).json({
       success: true,
       application: savedApplication,
@@ -703,11 +580,14 @@ export const getStudentsJobStatistics = async (req: Request, res: Response) => {
   try {
     // @ts-ignore
     const user = req.user;
-    const student = await Student.findOne({ googleId: user.uid }).populate(
-      "stud_info_id stud_department"
-    );
+    const redisKey = `studentsJobStatistics:${user.uid}`;
+    const cachedData = await redis.get(redisKey);
 
-    // console.log("Student", student);
+    if (cachedData) {
+      return res.status(200).json({ success: true, ...cachedData });
+    }
+
+    const student = await Student.findOne({ googleId: user.uid }).populate("stud_info_id stud_department");
 
     if (!student) {
       return res.status(404).json({ success: false, msg: "Student not found" });
@@ -715,19 +595,13 @@ export const getStudentsJobStatistics = async (req: Request, res: Response) => {
 
     const appliedJobs = await Application.find({ student: student._id });
     const studentInfo = {
-      //@ts-ignore
       no_of_dead_backlogs: student.stud_info_id.no_of_dead_backlogs,
-      //@ts-ignore
       no_of_live_backlogs: student.stud_info_id.no_of_live_backlogs,
-      //@ts-ignore
-      // averageCGPI: student.stud_info_id.averageCGPI,
       stud_department: student.stud_department,
-      stud_year: student.stud_year, // if needed for additional checks
+      stud_year: student.stud_year,
     };
 
-    // Assuming jobs is retrieved from the database
-    const jobs = await Job.find(); // Fetch all jobs
-
+    const jobs = await Job.find();
     let eligibleCount = 0;
     let notEligibleCount = 0;
 
@@ -735,10 +609,7 @@ export const getStudentsJobStatistics = async (req: Request, res: Response) => {
       const isEligible =
         studentInfo.no_of_dead_backlogs <= job.max_no_dead_kt &&
         studentInfo.no_of_live_backlogs <= job.max_no_live_kt &&
-        // studentInfo.averageCGPI >= job.min_CGPI && // Use average CGPI
-        //@ts-ignore
         job.branch_allowed.includes(studentInfo?.stud_department?.dept_name);
-      // Add branch allowed or passing year check if needed
 
       if (isEligible) {
         eligibleCount++;
@@ -747,12 +618,10 @@ export const getStudentsJobStatistics = async (req: Request, res: Response) => {
       }
     });
 
-    return res.status(200).json({
-      success: true,
-      eligibleCount,
-      notEligibleCount,
-      appliedJobs: appliedJobs.length, // Additional info if needed
-    });
+    const data = { success: true, eligibleCount, notEligibleCount, appliedJobs: appliedJobs.length };
+    await redis.set(redisKey, JSON.stringify(data), { EX: 600 });
+
+    return res.status(200).json(data);
   } catch (error: any) {
     console.log("Error in getStudentsJobStatistics", error.message);
     return res.status(500).json({ success: false, msg: "Server Error" });
@@ -763,85 +632,98 @@ export const getJobAppliedByStudent = async (req: Request, res: Response) => {
   try {
     // @ts-ignore
     const user = req.user;
+    const redisKey = `jobsAppliedByStudent:${user.uid}`;
+    const cachedJobs = await redis.get(redisKey);
+
+    if (cachedJobs) {
+      return res.status(200).json({ success: true, appliedJobs: cachedJobs });
+    }
+
     const student = await Student.findOne({ googleId: user.uid });
 
     if (!student) {
       return res.status(404).json({ success: false, msg: "Student not found" });
     }
 
-    const appliedJobs = await Application.find({
-      student: student._id,
-    }).populate("app_job_id");
+    const appliedJobs = await Application.find({ student: student._id }).populate("app_job_id");
 
     if (appliedJobs.length === 0) {
-      return res.status(200).json({ success: true, appliedJobs: [] });
+      const data = { success: true, appliedJobs: [] };
+      await redis.set(redisKey, JSON.stringify(data), { EX: 600 });
+      return res.status(200).json(data);
     }
 
-    return res.status(200).json({ success: true, appliedJobs });
+    const data = { success: true, appliedJobs };
+    await redis.set(redisKey, JSON.stringify(data), { EX: 600 });
+
+    return res.status(200).json(data);
   } catch (error: any) {
     console.log("Error in getJobAppliedByStudent", error.message);
     return res.status(500).json({ msg: "Internal Server Error" });
   }
 };
 
-export const getRecommededJobs = async (req: Request, res: Response) => {
+export const getRecommendedJobs = async (req: Request, res: Response) => {
   try {
     // @ts-ignore
     const user = req.user;
+    const redisKey = `recommendedJobs:${user.uid}`;
+    const cachedJobs = await redis.get(redisKey);
 
-    // Find the student based on the Google ID from the request
+    if (cachedJobs) {
+      return res.status(200).json({ success: true, jobs: cachedJobs });
+    }
+
     const student = await Student.findOne({ googleId: user.uid });
 
     if (!student) {
       return res.status(404).json({ success: false, msg: "Student not found" });
     }
 
-    // Find jobs that are allowed for the student's department
-    const jobs = await Job.find({
-      branch_allowed: { $in: [student.stud_department] }, // Check if student's department is in branch_allowed array
-    });
+    const jobs = await Job.find({ branch_allowed: { $in: [student.stud_department] } });
 
-    // If no jobs are found, return a 404 response
     if (!jobs.length) {
-      return res
-        .status(404)
-        .json({ success: false, msg: "No recommended jobs found" });
+      return res.status(404).json({ success: false, msg: "No recommended jobs found" });
     }
 
-    // Find applications that match the student ID and job IDs
     const appliedJobs = await Application.find({
       student: student._id,
-      app_job_id: { $in: jobs.map((job: any) => job._id) }, // Check for job IDs in the jobs found
+      app_job_id: { $in: jobs.map((job: any) => job._id) },
     });
 
-    // Extract applied job IDs
-    const appliedJobIds = appliedJobs.map((application: any) =>
-      application.app_job_id.toString()
-    );
+    const appliedJobIds = appliedJobs.map((application: any) => application.app_job_id.toString());
+    const recommendedJobs = jobs.filter((job: any) => !appliedJobIds.includes(job._id.toString()));
 
-    // Filter out jobs that the student has already applied for
-    const recommendedJobs = jobs.filter(
-      (job: any) => !appliedJobIds.includes(job._id.toString())
-    );
+    const data = { success: true, jobs: recommendedJobs };
+    await redis.set(redisKey, JSON.stringify(data), { EX: 600 });
 
-    return res.status(200).json({ success: true, jobs: recommendedJobs });
+    return res.status(200).json(data);
   } catch (error: any) {
-    console.log("Error in getRecommededJobs", error.message);
+    console.log("Error in getRecommendedJobs", error.message);
     return res.status(500).json({ msg: "Internal Server Error" });
   }
 };
 
 export const getJobAppliedDetailsById = async (req: Request, res: Response) => {
   try {
-    // @ts-ignore
-    const user = req.user;
     const { id } = req.params;
+    const redisKey = `jobAppliedDetails:${id}`;
+    const cachedJob = await redis.get(redisKey);
+
+    if (cachedJob) {
+      return res.status(200).json({ success: true, job: cachedJob});
+    }
+
     const job = await Job.findById(id);
 
     if (!job) {
       return res.status(404).json({ success: false, msg: "Job not found" });
     }
-    return res.status(200).json({ success: true, job });
+
+    const data = { success: true, job };
+    await redis.set(redisKey, JSON.stringify(data), { EX: 600 });
+
+    return res.status(200).json(data);
   } catch (error: any) {
     console.log("Error in getJobDetailsById", error.message);
     return res.status(500).json({ msg: "Internal Server Error" });
