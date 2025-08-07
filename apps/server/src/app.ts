@@ -23,9 +23,7 @@ export const Document_server_url: string =
 //   // }
 // );
 
-app.use(cors({
-  origin:"http://localhost:3000"
-}))
+app.use(cors())
 
 app.use(express.json());
 

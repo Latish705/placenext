@@ -71,7 +71,7 @@ const FinalApplication = () => {
     };
 
     fetchJobDetails();
-  }, [job_id]);
+  }, [job_id, setLoading]);
   // Handle checkbox change
   const handleCheckboxChange = () => {
     setIsChecked(!isChecked);

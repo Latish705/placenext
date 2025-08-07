@@ -3,7 +3,8 @@ import Department from "../../college/models/department";
 import College from "../../college/models/college";
 import { redis } from "../..";
 import Student from "../models/student";
-import Offer from "../models/offers";
+import Offer from "../../company/models/offer";
+
 export const getDeparments = async (req: Request, res: Response) => {
   try {
     //@ts-ignore

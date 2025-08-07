@@ -12,7 +12,7 @@ import {
   clearStudentCache
 } from "@/config/services/cache_service";
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { toast } from "react-toastify";
 
 import useLoadingStore from "@/store/loadingStore";
@@ -130,7 +130,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchData();
-  }, [setLoading]);
+  });
 
   return (
     <div className="mt-20 h-full w-full scroll-smooth p-10 flex flex-col">

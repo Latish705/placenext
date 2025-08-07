@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { fetchStudentData as fetchStudentDataOriginal, StudentCacheKeys as OriginalStudentCacheKeys, clearStudentCache as originalClearStudentCache } from './cache_service';
 
 // Re-export the original cache keys
@@ -22,7 +22,7 @@ export function useStudentData<T>(
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchData = async (forceRefresh = false) => {
+  const fetchData = useCallback(async (forceRefresh = false) => {
     try {
       setLoading(true);
       setError(null);
@@ -32,7 +32,7 @@ export function useStudentData<T>(
         clearStudentCache(cacheKey);
       }
 
-      const response = await fetchStudentData<T>(
+      const response = await fetchStudentDataOriginal<T>(
         endpoint,
         cacheKey,
         {
@@ -53,12 +53,12 @@ export function useStudentData<T>(
     } finally {
       setLoading(false);
     }
-  };
+  }, [endpoint, cacheKey, cacheExpirationMs]);
 
   // Initial data fetch
   useEffect(() => {
     fetchData();
-  }, [endpoint, cacheKey]);
+  }, [fetchData]);
 
   // Return data, loading state, error, and a function to refresh data
   return [data, loading, error, () => fetchData(true)];

@@ -36,7 +36,7 @@ export default function CompanyDashboard() {
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  });
 
   const fetchDashboardData = async () => {
     try {

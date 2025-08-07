@@ -75,7 +75,7 @@ export default function JobListingPage() {
 
   useEffect(() => {
     fetchJobs();
-  }, []);
+  }, [setLoading]);
 
   return (
     <div className="container mx-auto p-4 pt-10">

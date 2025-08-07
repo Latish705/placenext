@@ -101,7 +101,7 @@ export default function JobOffers() {
 
   useEffect(() => {
     fetchOffers();
-  }, [setLoading]);
+  }, []);
 
   const handleAcceptOffer = async (offerId: string) => {
     setResponseLoading({
@@ -265,7 +265,7 @@ export default function JobOffers() {
             No Job Offers Yet
           </h3>
           <p className="text-gray-500 dark:text-gray-400 mb-6">
-            You haven't received any job offers yet. Keep applying to jobs!
+            You haven&apos;t received any job offers yet. Keep applying to jobs!
           </p>
           <Button
             onClick={() => router.push('/student/applyjob')}

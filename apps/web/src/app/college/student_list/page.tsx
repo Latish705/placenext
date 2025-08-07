@@ -2,7 +2,7 @@
 
 import { BackendUrl } from "@/utils/constants";
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 
@@ -38,7 +38,7 @@ export default function StudentList() {
   const [company, setCompany] = useState("");
   const [year, setYear] = useState("");
 
-  const fetchStudents = async () => {
+  const fetchStudents = useCallback(async () => {
     try {
       const endpoint = isFilterApplied
         ? `${BackendUrl}/api/college/filter_students`
@@ -63,7 +63,7 @@ export default function StudentList() {
       console.error(err);
       toast.error("Failed to fetch student data.");
     }
-  };
+  }, [isFilterApplied, filter]);
 
   useEffect(() => {
     fetchStudents();

@@ -188,7 +188,7 @@ const SignUpFormStudent = () => {
             </p>
           )}
           {password !== confirmPassword && confirmPassword && (
-            <p className="text-red-500 text-sm mt-1">Passwords don't match</p>
+            <p className="text-red-500 text-sm mt-1">Passwords don&apos;t match</p>
           )}
         </div>
 

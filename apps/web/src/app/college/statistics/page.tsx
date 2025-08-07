@@ -460,10 +460,10 @@ export default function StatisticsDashboard() {
           secondOfferAbove6LPA: secondOfferAbove6LPARes.data.count,
           offersBelow6LPA: belowRes.data.count,
           offersAbove6LPA: aboveRes.data.count,
-          offersBelow6LPA_Accepted: belowOffers.filter(o => o.status === 'accepted').length,
-          offersBelow6LPA_NotAccepted: belowOffers.filter(o => o.status !== 'accepted').length,
-          offersAbove6LPA_Accepted: aboveOffers.filter(o => o.status === 'accepted').length,
-          offersAbove6LPA_NotAccepted: aboveOffers.filter(o => o.status !== 'accepted').length,
+          offersBelow6LPA_Accepted: belowOffers.filter((o: any) => o.status === 'accepted').length,
+          offersBelow6LPA_NotAccepted: belowOffers.filter((o: any) => o.status !== 'accepted').length,
+          offersAbove6LPA_Accepted: aboveOffers.filter((o: any) => o.status === 'accepted').length,
+          offersAbove6LPA_NotAccepted: aboveOffers.filter((o: any) => o.status !== 'accepted').length,
         });
 
         // Default: show all students for totalOffers
@@ -632,9 +632,9 @@ export default function StatisticsDashboard() {
             <Bar data={barChartData} options={{ responsive: true, maintainAspectRatio: false }} />
           </div>
           <div className="flex-1 flex flex-col justify-between">
-            {summaryCard('Total Offers', statisticsData.totalOffers, 'text-red-500')}
-            {summaryCard('Under 6 LPA', statisticsData.under6LPA, 'text-blue-500')}
-            {summaryCard('Second Offers ≥6 LPA', statisticsData.secondOfferAbove6LPA, 'text-yellow-500')}
+            {summaryCard('Total Offers', statisticsData?.totalOffers ?? 0, 'text-red-500')}
+            {summaryCard('Under 6 LPA', statisticsData?.under6LPA ?? 0, 'text-blue-500')}
+            {summaryCard('Second Offers ≥6 LPA', statisticsData?.secondOfferAbove6LPA ?? 0, 'text-yellow-500')}
           </div>
         </div>
       )}
@@ -645,8 +645,8 @@ export default function StatisticsDashboard() {
             <Pie data={pieSalary} options={{ responsive: true, maintainAspectRatio: false }} />
           </div>
           <div className="flex-1 flex flex-col justify-between">
-            {summaryCard('Offers < 6 LPA', statisticsData.offersBelow6LPA, 'text-red-500')}
-            {summaryCard('Offers ≥ 6 LPA', statisticsData.offersAbove6LPA, 'text-blue-500')}
+            {summaryCard('Offers < 6 LPA', statisticsData?.offersBelow6LPA ?? 0, 'text-red-500')}
+            {summaryCard('Offers ≥ 6 LPA', statisticsData?.offersAbove6LPA ?? 0, 'text-blue-500')}
           </div>
         </div>
       )}
@@ -657,8 +657,8 @@ export default function StatisticsDashboard() {
             <Pie data={pieBelow} options={{ responsive: true, maintainAspectRatio: false }} />
           </div>
           <div className="flex-1 flex flex-col justify-between">
-            {summaryCard('Accepted', statisticsData.offersBelow6LPA_Accepted, 'text-green-500')}
-            {summaryCard('Not Accepted', statisticsData.offersBelow6LPA_NotAccepted, 'text-red-500')}
+            {summaryCard('Accepted', statisticsData?.offersBelow6LPA_Accepted ?? 0, 'text-green-500')}
+            {summaryCard('Not Accepted', statisticsData?.offersBelow6LPA_NotAccepted ?? 0, 'text-red-500')}
           </div>
         </div>
       )}
@@ -669,8 +669,8 @@ export default function StatisticsDashboard() {
             <Pie data={pieAbove} options={{ responsive: true, maintainAspectRatio: false }} />
           </div>
           <div className="flex-1 flex flex-col justify-between">
-            {summaryCard('Accepted', statisticsData.offersAbove6LPA_Accepted, 'text-green-500')}
-            {summaryCard('Not Accepted', statisticsData.offersAbove6LPA_NotAccepted, 'text-red-500')}
+            {summaryCard('Accepted', statisticsData?.offersAbove6LPA_Accepted || 0, 'text-green-500')}
+            {summaryCard('Not Accepted', statisticsData?.offersAbove6LPA_NotAccepted || 0, 'text-red-500')}
           </div>
         </div>
       )}
