@@ -300,18 +300,21 @@ export const totalNoOfOffers = async (req: Request, res: Response) => {
     }
 
     const faculty = await Faculty.findOne({ googleId: user.uid }).select("faculty_college_id");
-
+    // console.log("Faculty fetched:", faculty);
     if (!faculty?.faculty_college_id) {
       return res.status(404).json({ success: false, msg: "Faculty's college ID not found" });
     }
 
     const collegeId = faculty.faculty_college_id;
+    // console.log("College ID:", collegeId);
+    // Step 1: Get all student IDs from the same college
     const students = await Student.find({ stud_college_id: collegeId }).select("_id");
     const studentIds = students.map((s: IStudent) => s._id);
+    // console.log("Student IDs:", studentIds);
+
+    // Step 2: Count offers linked to those students
     const totalOffers = await Offer.countDocuments({ studentId: { $in: studentIds } });
-
-    await redis.set(redisKey, JSON.stringify(totalOffers), { EX: 600 });
-
+    // console.log("Total offers found:", totalOffers);
     res.status(200).json({
       success: true,
       totalOffers,
@@ -339,21 +342,25 @@ export const studentsAcceptedUnder6LPA = async (req: Request, res: Response) => 
     }
 
     const faculty = await Faculty.findOne({ googleId: user.uid }).select("faculty_college_id");
-
+    // console.log("Faculty fetched:", faculty);
     if (!faculty?.faculty_college_id) {
       return res.status(404).json({ success: false, msg: "Faculty's college ID not found" });
     }
 
     const collegeId = faculty.faculty_college_id;
+    // console.log("College ID:", collegeId);
+    // Get students in the same college
     const students = await Student.find({ stud_college_id: collegeId }).select("_id");
-    const studentIds = students.map((s: IStudent) => s._id);
+
+
+    const studentIds: string[] = students.map((s: IStudent) => s._id);
+    // console.log("Student IDs:", studentIds);
     const count = await Offer.countDocuments({
       studentId: { $in: studentIds },
       status: 'accepted',
       package: { $lt: 600000 }
     });
-
-    await redis.set(redisKey, JSON.stringify(count), { EX: 600 });
+    // console.log("Count of students who accepted offers < 6 LPA:", count);
 
     res.status(200).json({
       success: true,
@@ -370,19 +377,10 @@ export const studentsAcceptedSecondOfferOver6LPA = async (req: Request, res: Res
   try {
     // @ts-ignore
     const user = req.user;
-    const redisKey = `studentsAcceptedSecondOfferOver6LPA:${user.uid}`;
-    const cachedCount = await redis.get(redisKey);
-
-    if (cachedCount) {
-      return res.status(200).json({
-        success: true,
-        count: cachedCount,
-        msg: "Students who accepted 2nd offer ≥ 6 LPA fetched successfully from cache",
-      });
-    }
+    // console.log("API triggered by user:", user.uid);
 
     const faculty = await Faculty.findOne({ googleId: user.uid }).select("faculty_college_id");
-
+    // console.log("Faculty fetched:", faculty);
     if (!faculty?.faculty_college_id) {
       return res.status(404).json({ success: false, msg: "Faculty's college ID not found" });
     }
@@ -396,8 +394,7 @@ export const studentsAcceptedSecondOfferOver6LPA = async (req: Request, res: Res
       package: { $gte: 600000 },
       offerNumber: 2
     });
-
-    await redis.set(redisKey, JSON.stringify(count), { EX: 600 });
+    // console.log("Count of students who accepted 2nd offer ≥ 6 LPA:", count);
 
     res.status(200).json({
       success: true,
@@ -414,38 +411,32 @@ export const getOffersAbove6LPA = async (req: Request, res: Response) => {
   try {
     // @ts-ignore
     const user = req.user;
-    const redisKey = `offersAbove6LPA:${user.uid}`;
-    const cachedOffers = await redis.get(redisKey);
-
-    if (cachedOffers) {
-      return res.status(200).json({
-        success: true,
-        offers: cachedOffers,
-        msg: "Offers greater than or equal to 6 LPA fetched successfully from cache",
-      });
-    }
+    // console.log("API triggered by user in getOffersAbove6LPA:", user.uid);
 
     const faculty = await Faculty.findOne({ googleId: user.uid }).select("faculty_college_id");
-
+    // console.log("Faculty fetched:", faculty);
     if (!faculty?.faculty_college_id) {
       return res.status(404).json({ success: false, msg: "Faculty's college ID not found" });
     }
 
     const collegeId = faculty.faculty_college_id;
+    // console.log("College ID:", collegeId);
+
     const students = await Student.find({ stud_college_id: collegeId }).select("_id");
     const studentIds = students.map((s: IStudent) => s._id);
+    // console.log("Student IDs in getOffersAbove6LPA:", studentIds);
 
     const offers = await Offer.find({
       studentId: { $in: studentIds },
-      package: { $gte: 600000 }
+      package: { $gte: 600000 },
     }).populate('studentId jobId');
-
-    await redis.set(redisKey, JSON.stringify(offers), { EX: 600 });
+    // console.log("Offers fetched in getOffersAbove6LPA:", offers.length);
 
     res.status(200).json({
       success: true,
       offers,
-      msg: "Offers greater than or equal to 6 LPA fetched successfully"
+      count: offers.length,
+      msg: "Offers greater than or equal to 6 LPA fetched successfully",
     });
   } catch (error: any) {
     console.error("Error in getOffersAbove6LPA:", error.message);
@@ -453,45 +444,48 @@ export const getOffersAbove6LPA = async (req: Request, res: Response) => {
   }
 };
 
-export const getOffersBelow6LPA = async (req: Request, res: Response) => {
+
+
+//filter 8 *************************************************
+export const getOffersBelow6lpa = async (req: Request, res: Response) => {
   try {
     // @ts-ignore
     const user = req.user;
-    const redisKey = `offersBelow6LPA:${user.uid}`;
-    const cachedOffers = await redis.get(redisKey);
-
-    if (cachedOffers) {
-      return res.status(200).json({
-        success: true,
-        offers:cachedOffers,
-        msg: "Offers less than 6 LPA fetched successfully from cache",
-      });
-    }
+    // console.log("API triggered by user in getOffersBelow6LPA:", user.uid);
 
     const faculty = await Faculty.findOne({ googleId: user.uid }).select("faculty_college_id");
-
+    // console.log("Faculty fetched:", faculty);
     if (!faculty?.faculty_college_id) {
-      return res.status(404).json({ success: false, msg: "Faculty's college ID not found" });
+      res.status(404).json({ success: false, msg: "Faculty's college ID not found" });
+      return;
     }
 
     const collegeId = faculty.faculty_college_id;
+    // console.log("College ID:", collegeId);
+
     const students = await Student.find({ stud_college_id: collegeId }).select("_id");
     const studentIds = students.map((s: IStudent) => s._id);
+    // console.log("Student IDs in getOffersBelow6LPA:", studentIds);
 
     const offers = await Offer.find({
       studentId: { $in: studentIds },
-      package: { $lt: 600000 }
+      package: { $lt: 600000 },
     }).populate('studentId jobId');
-
-    await redis.set(redisKey, JSON.stringify(offers), { EX: 600 });
+    // console.log("Offers fetched in getOffersBelow6LPA:", offers.length);
 
     res.status(200).json({
       success: true,
       offers,
-      msg: "Offers less than 6 LPA fetched successfully"
+      count: offers.length,
+      msg: "Offers less than 6 LPA fetched successfully",
     });
+
   } catch (error: any) {
     console.error("Error in getOffersBelow6LPA:", error.message);
     res.status(500).json({ success: false, msg: "Internal Server Error" });
   }
 };
+
+
+
+

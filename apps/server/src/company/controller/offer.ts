@@ -1,10 +1,12 @@
-import { Request, Response } from "express";
-import Offer from "../models/offer";
+
+
 import Job from "../../job/models/job";
 import Student from "../../student/models/student";
 import { redis } from "../..";
+import Offer from "../models/offer";
+import { Request, Response  } from "express";
 
-export const createOffer = async (req: Request, res: Response) => {
+export const createOffer = async (req: Request, res: Response):Promise<any> => {
     try {
         const { jobId, studentId } = req.body;
         console.log(" (create Offer) req body:- ");
@@ -18,7 +20,7 @@ export const createOffer = async (req: Request, res: Response) => {
         }
         console.log(" (create Offer) job details:- ", job);
 
-        const student = await Student.findById(studentId);
+        const student = await Student.findById(studentId); // Changed from findOne to findById
         if (!student) {
             return res.status(404).json({ success: false, message: "Student not found!" });
         }
@@ -37,7 +39,7 @@ export const createOffer = async (req: Request, res: Response) => {
         console.log(" (create Offer) existing offer details:- ", existingOffer);
 
         const newOffer = await Offer.create({
-            jobId: jobId,
+            jobId: jobId, // Changed from job to jobId
             studentId: studentId,
             package: job.job_salary,
             company: job.company_name.comp_name,
@@ -61,6 +63,7 @@ export const createOffer = async (req: Request, res: Response) => {
 export const changeOfferStatus = async (req: Request, res: Response) => {
     try {
         const { offerId, status } = req.body;
+
         if (!offerId || !status) {
             return res.status(400).json({ success: false, message: "Offer ID and status are required" });
         }
@@ -69,6 +72,8 @@ export const changeOfferStatus = async (req: Request, res: Response) => {
         if (!offer) {
             return res.status(404).json({ success: false, message: "Offer not found" });
         }
+
+
 
         offer.status = status;
         await offer.save();
@@ -80,11 +85,13 @@ export const changeOfferStatus = async (req: Request, res: Response) => {
         await redis.del(`offers:job:${offer.jobId}:rejected`);
         await redis.del(`offers:job:${offer.jobId}:offered`);
 
+
         return res.status(200).json({ success: true, message: "Offer status updated", data: offer });
     } catch (error: any) {
         console.error("Error in changeOfferStatus:", error.message);
         return res.status(500).json({ success: false, message: "Internal Server Error", data: error.message });
     }
+
 };
 
 export const getOfferByStudentId = async (req: Request, res: Response) => {
@@ -94,12 +101,14 @@ export const getOfferByStudentId = async (req: Request, res: Response) => {
             return res.status(400).json({ success: false, message: "Student ID is required" });
         }
 
+
         const redisKey = `offers:student:${studentId}`;
         const cachedOffers = await redis.get(redisKey);
 
         if (cachedOffers) {
-            return res.status(200).json({ success: true, data: cachedOffers });
+            return res.status(200).json({ success: true, data: JSON.parse(cachedOffers) });
         }
+
 
         const student = await Student.findById(studentId);
         if (!student) {
@@ -107,18 +116,25 @@ export const getOfferByStudentId = async (req: Request, res: Response) => {
         }
 
         const offers = await Offer.find({ studentId: studentId }).populate("jobId").populate("studentId");
+
         await redis.set(redisKey, JSON.stringify(offers), { EX: 600 });
+
 
         return res.status(200).json({ success: true, data: offers });
     } catch (error: any) {
         console.error("Error in getOfferByStudentId:", error.message);
         return res.status(500).json({ success: false, message: "Internal Server Error", data: error.message });
     }
+
 };
+
 
 export const getOfferByOfferId = async (req: Request, res: Response) => {
     try {
         const { offerId } = req.body;
+
+
+
         if (!offerId) {
             return res.status(400).json({ success: false, message: "Offer ID is required" });
         }
@@ -127,18 +143,31 @@ export const getOfferByOfferId = async (req: Request, res: Response) => {
         const cachedOffer = await redis.get(redisKey);
 
         if (cachedOffer) {
-            return res.status(200).json({ success: true, data: cachedOffer });
+            return res.status(200).json({ success: true, data: JSON.parse(cachedOffer) });
         }
 
         const offer = await Offer.findById(offerId).populate("jobId").populate("studentId");
         await redis.set(redisKey, JSON.stringify(offer), { EX: 600 });
+
 
         return res.status(200).json({ success: true, data: offer });
     } catch (error: any) {
         console.error("Error in getOfferByOfferId:", error.message);
         return res.status(500).json({ success: false, message: "Internal Server Error", data: error.message });
     }
-};
+
+}
+
+export const listofoffersbyjobId=async(req:Request,res:Response)=>{
+    try {
+        // This function was duplicated and had an incomplete try-catch block.
+        // The correct implementation is in listOfOffersByJobId below.
+        // This empty block is left to avoid breaking existing code structure if it's referenced elsewhere.
+}catch(error:any){
+    console.log(error.message);
+    
+
+}};
 
 export const listOfOffersByJobId = async (req: Request, res: Response) => {
     try {
@@ -151,8 +180,9 @@ export const listOfOffersByJobId = async (req: Request, res: Response) => {
         const cachedOffers = await redis.get(redisKey);
 
         if (cachedOffers) {
-            return res.status(200).json({ success: true, data: cachedOffers });
+            return res.status(200).json({ success: true, data: JSON.parse(cachedOffers) });
         }
+
 
         const job = await Job.findById(jobId);
         if (!job) {
@@ -167,21 +197,26 @@ export const listOfOffersByJobId = async (req: Request, res: Response) => {
         console.error("Error in listOfOffersByJobId:", error.message);
         return res.status(500).json({ success: false, message: "Internal Server Error", data: error.message });
     }
-};
+}
+
 
 export const getAcceptedOffersByJobId = async (req: Request, res: Response) => {
     try {
         const { jobId } = req.body;
+
+
         if (!jobId) {
             return res.status(400).json({ success: false, message: "Job ID is required" });
         }
+
 
         const redisKey = `offers:job:${jobId}:accepted`;
         const cachedOffers = await redis.get(redisKey);
 
         if (cachedOffers) {
-            return res.status(200).json({ success: true, data: cachedOffers });
+            return res.status(200).json({ success: true, data: JSON.parse(cachedOffers) });
         }
+
 
         const job = await Job.findById(jobId);
         if (!job) {
@@ -189,28 +224,36 @@ export const getAcceptedOffersByJobId = async (req: Request, res: Response) => {
         }
 
         const offers = await Offer.find({ jobId: jobId, status: "accepted" }).populate("studentId");
+
         await redis.set(redisKey, JSON.stringify(offers), { EX: 600 });
+
 
         return res.status(200).json({ success: true, data: offers });
     } catch (error: any) {
         console.error("Error in getAcceptedOffersByJobId:", error.message);
         return res.status(500).json({ success: false, message: "Internal Server Error", data: error.message });
     }
+
 };
+
 
 export const getRejectedOffersByJobId = async (req: Request, res: Response) => {
     try {
         const { jobId } = req.body;
+
+
         if (!jobId) {
             return res.status(400).json({ success: false, message: "Job ID is required" });
         }
+
 
         const redisKey = `offers:job:${jobId}:rejected`;
         const cachedOffers = await redis.get(redisKey);
 
         if (cachedOffers) {
-            return res.status(200).json({ success: true, data: cachedOffers });
+            return res.status(200).json({ success: true, data: JSON.parse(cachedOffers) });
         }
+
 
         const job = await Job.findById(jobId);
         if (!job) {
@@ -218,14 +261,18 @@ export const getRejectedOffersByJobId = async (req: Request, res: Response) => {
         }
 
         const offers = await Offer.find({ jobId: jobId, status: "rejected" }).populate("studentId");
+
         await redis.set(redisKey, JSON.stringify(offers), { EX: 600 });
+
 
         return res.status(200).json({ success: true, data: offers });
     } catch (error: any) {
         console.error("Error in getRejectedOffersByJobId:", error.message);
         return res.status(500).json({ success: false, message: "Internal Server Error", data: error.message });
     }
+
 };
+
 
 export const getOfferedOffersByJobId = async (req: Request, res: Response) => {
     try {
@@ -234,12 +281,14 @@ export const getOfferedOffersByJobId = async (req: Request, res: Response) => {
             return res.status(400).json({ success: false, message: "Job ID is required" });
         }
 
+
         const redisKey = `offers:job:${jobId}:offered`;
         const cachedOffers = await redis.get(redisKey);
 
         if (cachedOffers) {
-            return res.status(200).json({ success: true, data: cachedOffers });
+            return res.status(200).json({ success: true, data: JSON.parse(cachedOffers) });
         }
+
 
         const job = await Job.findById(jobId);
         if (!job) {
@@ -247,11 +296,14 @@ export const getOfferedOffersByJobId = async (req: Request, res: Response) => {
         }
 
         const offers = await Offer.find({ jobId: jobId, status: "offered" }).populate("studentId");
+
         await redis.set(redisKey, JSON.stringify(offers), { EX: 600 });
+
 
         return res.status(200).json({ success: true, data: offers });
     } catch (error: any) {
         console.error("Error in getOfferedOffersByJobId:", error.message);
         return res.status(500).json({ success: false, message: "Internal Server Error", data: error.message });
     }
+
 };

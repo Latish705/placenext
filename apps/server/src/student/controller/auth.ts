@@ -9,8 +9,9 @@ import { Document_server_url } from "../../app";
 import Job, { IJob } from "../../job/models/job";
 import Application from "../models/application";
 import { jobs } from "googleapis/build/src/apis/jobs";
+import CollegeJobLink from "../../job/models/collegeJobLink";
+import Company from "../../company/models/company";
 import { redis } from "../..";
-
 const requiredFields = [
   "firstName",
   "middleName",
@@ -31,11 +32,10 @@ const requiredFields = [
   "panNumber",
   "liveBacklogs",
   "deadBacklogs",
-  "placementStatus",
+  // "placementStatus",
   "skills",
-  "linkedIn",
-  "github",
-  "collegeId",
+  "linkedInLink",
+  "githubLink",
 ];
 
 const uploadMarksheet = async (file: any, label: string) => {
@@ -160,8 +160,13 @@ export const applicationFrom = async (req: Request, res: Response) => {
       stud_pan: fields.panNumber,
       no_of_live_backlogs: fields.liveBacklogs,
       no_of_dead_backlogs: fields.deadBacklogs,
-      stud_linkedIn: fields.linkedIn,
-      stud_github: fields.github,
+      // stud_placement_status: fields.placementStatus, // this is remaining
+      // stud_placement_package: fields.placementPackage, // this is remaining
+      // stud_placement_company: fields.placementCompany, // this is remaining
+      // stud_placement_date: fields.placementDate, // this is remaining
+      // student_skills: fields.skills, // this is remaining
+      stud_linkedIn: fields.linkedInLink, // this is remaining
+      stud_github: fields.githubLink, // this is remaining
     });
 
     const savedStudentInfo = await studentInfo.save();
@@ -366,29 +371,24 @@ export const getStudentStatistics = async (req: Request, res: Response) => {
   }
 };
 
+
+
 export const getJobForCollege = async (req: Request, res: Response) => {
   try {
     // @ts-ignore
     const user = req.user;
-    const redisKey = `jobsForCollege:${user.uid}`;
-    const cachedJobs = await redis.get(redisKey);
-
-    if (cachedJobs) {
-      return res.status(200).json({ success: true, ...cachedJobs});
-    }
-
     const student = await Student.findOne({ googleId: user.uid }).populate("stud_department");
 
     if (!student) {
       return res.status(404).json({ success: false, msg: "Student not found" });
     }
 
-    const studentInfo = await StudentInfo.findOne({ _id: student.stud_info_id });
-
+    const studentInfo = await StudentInfo.findById(student.stud_info_id);
     if (!studentInfo) {
       return res.status(404).json({ success: false, msg: "Student info not found" });
     }
 
+    // Calculate average CGPI
     const grades = [
       studentInfo.stud_sem1_grade,
       studentInfo.stud_sem2_grade,
@@ -400,38 +400,77 @@ export const getJobForCollege = async (req: Request, res: Response) => {
       studentInfo.stud_sem8_grade,
     ];
 
-    const totalGrades = grades.reduce((sum, grade) => {
-      return grade !== "" && !isNaN(Number(grade)) ? sum + Number(grade) : sum;
-    }, 0);
+    const validGrades = grades.filter(g => g !== "" && !isNaN(Number(g)));
+    const totalCGPI = validGrades.reduce((sum, g) => sum + Number(g), 0);
+    const averageCGPI = validGrades.length > 0 ? totalCGPI / validGrades.length : 0;
 
-    const validSemesters = grades.filter(grade => grade !== "" && grade !== null && !isNaN(Number(grade))).length;
-    const averageCGPI = validSemesters > 0 ? totalGrades / validSemesters : 0;
+    const collegeId = student.stud_college_id;
+    const jobLinks = await CollegeJobLink.find({ college: collegeId });
 
-    const jobs = await Job.find({ college: student.stud_college_id });
+    console.log(collegeId,jobLinks);
+    
+    // Fetch jobs with populated company name
+    const jobs: any[] = await Promise.all(
+      jobLinks.map(async (link: any) => {
+        console.log(link,link.job_info);
+        
+        const job = await Job.findById(link.job_info);
+        console.log(job);
+        
+        if (!job) return null;
+        const company = await Company.findById(job.company_name);
+        const jobObj = job;
+        jobObj.company_name = company ? company.comp_name : "Unknown";
+        return jobObj;
+      })
+    );
 
     if (!jobs.length) {
       return res.status(400).json({ success: false, student, message: "No Jobs Found" });
     }
 
+    // Build list of jobs with eligibility info
     const jobsWithEligibility = jobs.map((job: any) => {
-      const isEligible =
-        studentInfo.no_of_dead_backlogs <= job.max_no_dead_kt &&
-        studentInfo.no_of_live_backlogs <= job.max_no_live_kt &&
-        averageCGPI >= job.min_CGPI &&
-        job.branch_allowed.includes(student?.stud_department?.dept_name);
+      const reasons: string[] = [];
 
-      return { ...job.toObject(), isEligible };
+      if (studentInfo.no_of_dead_backlogs > job.max_no_dead_kt) {
+        reasons.push(`Too many dead KTs (allowed: ${job.max_no_dead_kt})`);
+      }
+
+      if (studentInfo.no_of_live_backlogs > job.max_no_live_kt) {
+        reasons.push(`Too many live KTs (allowed: ${job.max_no_live_kt})`);
+      }
+
+      if (averageCGPI < job.min_CGPI) {
+        reasons.push(`CGPI too low (required: ${job.min_CGPI})`);
+      }
+
+      if (!job.branch_allowed.includes(student?.stud_department?.dept_name)) {
+        reasons.push(`Branch not allowed`);
+      }
+
+      const isEligible = reasons.length === 0;
+
+      return {
+        ...job.toObject(),
+        company_name: job.company_name?.comp_name ?? "Unknown",
+        isEligible,
+        ineligibilityReasons: isEligible ? [] : reasons,
+      };
     });
 
-    const data = { success: true, student, jobs: jobsWithEligibility };
-    await redis.set(redisKey, JSON.stringify(data), { EX: 600 });
+    return res.status(200).json({
+      success: true,
+      student,
+      jobs: jobsWithEligibility,
+    });
 
-    return res.status(200).json(data);
   } catch (error: any) {
-    console.error("Error in getJobForCollege", error.message);
+    console.error("Error in getJobForCollege:", error.message);
     return res.status(500).json({ success: false, msg: "Internal Server Error" });
   }
 };
+
 
 export const getJobDetailsById = async (req: Request, res: Response) => {
   try {

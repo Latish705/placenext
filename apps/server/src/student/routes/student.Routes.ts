@@ -17,7 +17,7 @@ import {
   signup,
 } from "../controller/auth";
 import { upload } from "../../middlewares/multer";
-import { getDepartments } from "../controller/student.controller";
+import { getDeparments, getOfferByOfferId, getOfferByStudentId } from "../controller/student.controller";
 
 const studentRoutes = Router();
 
@@ -63,6 +63,9 @@ studentRoutes.get("/colleges", authenticateToken, getAllCollegeList);
 // student student statistics
 studentRoutes.get("/statistics", authenticateToken, getStudentStatistics);
 
+studentRoutes.get("/job_offers",authenticateToken,getOfferByStudentId)
+studentRoutes.get("/get_offer_by_id/:offerId",authenticateToken,getOfferByOfferId)
+
 studentRoutes.get(
   "/job_statistics",
   authenticateToken,
@@ -79,7 +82,7 @@ studentRoutes.get(
   authenticateToken,
   getJobAppliedDetailsById
 );
-studentRoutes.post("/department", authenticateToken, getDepartments);
+// studentRoutes.post("/department", authenticateToken, getDepartments);
 
 // student applying to job
 studentRoutes.post(

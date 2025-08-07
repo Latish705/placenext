@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
 import { BackendUrl } from '@/utils/constants';
@@ -49,11 +49,8 @@ export default function JobDetail() {
   console.log('Job ID from params:', params.id);
   console.log('Job ID from params:', params.job_id);
   console.log('Job ID from params:', params);
-  useEffect(() => {
-    fetchJobDetails();
-  }, [params.job_id]);
 
-  const fetchJobDetails = async () => {
+  const fetchJobDetails = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -88,7 +85,11 @@ export default function JobDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.job_id, router]);
+
+  useEffect(() => {
+    fetchJobDetails();
+  }, [fetchJobDetails]);
 
   // const handlePromoteStudent = async (roundId: string, studentId: string) => {
   //   try {

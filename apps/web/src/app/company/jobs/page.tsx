@@ -30,7 +30,7 @@ export default function JobsOverview() {
 
     useEffect(() => {
         fetchJobs(activeTab);
-    }, []);
+    });
 
     const fetchJobs = async (status: string) => {
         try {

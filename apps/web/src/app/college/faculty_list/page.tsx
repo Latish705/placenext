@@ -106,7 +106,6 @@ const ParentComponent = () => {
         <select
           id="branch"
           onChange={handleFilterChange}
-          aria-placeholder="Select Branch"
           className="border p-2 bg-transparent"
         >
           <option value="">Select Branch</option>

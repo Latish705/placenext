@@ -1,4 +1,5 @@
 "use client";
+import useSWR from 'swr';
 
 import { BackendUrl } from "@/utils/constants";
 import { useEffect, useState } from "react";
@@ -35,7 +36,7 @@ export default function CompanyDashboard() {
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  });
 
   const fetchDashboardData = async () => {
     try {

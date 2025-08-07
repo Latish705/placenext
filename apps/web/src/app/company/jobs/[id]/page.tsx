@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
 import { BackendUrl } from '@/utils/constants';
-import React, { useState as useStateModal } from 'react';
+import React, { useState as useStateModal, useCallback } from 'react';
 
 interface Division {
   _id: string;
@@ -77,12 +77,7 @@ export default function JobDetail() {
   const [showModal, setShowModal] = useState(false);
   const [offerFilter, setOfferFilter] = useState<'all' | 'accepted' | 'rejected' | 'offered'>('all');
 
-  useEffect(() => {
-    fetchJobDetails();
-    fetchOffers(offerFilter);
-  }, [params.id, offerFilter]);
-
-  const fetchJobDetails = async () => {
+  const fetchJobDetails = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -117,10 +112,10 @@ export default function JobDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id, router]);
 
   // Fetch offers for this job
-  const fetchOffers = async (filter: 'all' | 'accepted' | 'rejected' | 'offered' = 'all') => {
+  const fetchOffers = useCallback(async (filter: 'all' | 'accepted' | 'rejected' | 'offered' = 'all') => {
     try {
       setOffersLoading(true);
       const token = localStorage.getItem('token');
@@ -147,7 +142,12 @@ export default function JobDetail() {
     } finally {
       setOffersLoading(false);
     }
-  };
+  }, [params.id]);
+
+  useEffect(() => {
+    fetchJobDetails();
+    fetchOffers(offerFilter);
+  }, [params.id, offerFilter, fetchJobDetails, fetchOffers]);
 
   const handlePromoteStudent = async (roundId: string, studentId: string) => {
     try {

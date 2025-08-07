@@ -7,6 +7,8 @@ import { BackendUrl } from "@/utils/constants";
 import { Button, Card, CardContent, Typography } from "@mui/material";
 import { useRouter } from "next/navigation";
 import useThemeStore from "@/store/store";
+import { toast } from "react-toastify";
+import { fetchStudentData, StudentCacheKeys, clearStudentCache } from "@/config/services/cache_service";
 
 interface RecommededJobs {
   _id: string;
@@ -28,29 +30,55 @@ interface RecommededJobs {
 const RecommendedJob = () => {
   const router = useRouter();
   const [appliedJobs, setAppliedJobs] = useState<RecommededJobs[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
   const { darkMode }: any = useThemeStore();
-
-  useEffect(() => {
-    const fetchAppliedJobs = async () => {
-      try {
-        const response = await axios.get(
-          `${BackendUrl}/api/student/recommended_jobs`,
-          {
+  
+  // Function to fetch jobs with caching
+  const fetchRecommendedJobs = async () => {
+    try {
+      // Use fetchStudentData with cache
+      const response = await fetchStudentData<{success: boolean, jobs: RecommededJobs[]}>(
+        `${BackendUrl}/api/student/recommended_jobs`,
+        StudentCacheKeys.RECOMMENDATIONS,
+        {
+          expirationMs: 300000, // 5 minutes cache
+          fetchOptions: {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          }
-        );
-        console.log(response.data);
-        if (response.data.success) {
-          setAppliedJobs(response.data.jobs);
+          },
         }
-      } catch (error) {
-        console.error(error);
+      );
+      
+      if (response.success) {
+        setAppliedJobs(response.jobs);
       }
-    };
-    fetchAppliedJobs();
+    } catch (error) {
+      console.error("Error fetching recommended jobs:", error);
+    }
+  };
+  
+  // Function to refresh data and clear cache
+  const refreshData = async () => {
+    setRefreshing(true);
+    try {
+      // Clear cache for recommended jobs
+      clearStudentCache(StudentCacheKeys.RECOMMENDATIONS);
+      
+      // Fetch fresh data
+      await fetchRecommendedJobs();
+      toast.success("Recommended jobs refreshed");
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRecommendedJobs();
   }, []);
+
 
   return (
     <div
