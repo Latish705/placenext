@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { signUpAndVerifyEmail, isUserVerified } from "@/config/firebase-config";
+import {  isUserVerified, signUpWithEmail } from "@/config/firebase-config";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import axios from "axios";
@@ -21,7 +21,7 @@ export default function VerifyEmail() {
 
     if (email && password) {
       try {
-        await signUpAndVerifyEmail(email, password);
+        await signUpWithEmail(email, password);
         toast.success("Verification email resent. Please check your inbox.");
       } catch (error) {
         console.error("Error resending email:", error);
