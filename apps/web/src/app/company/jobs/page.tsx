@@ -28,9 +28,7 @@ export default function JobsOverview() {
     const [jobs, setJobs] = useState<Job[]>([]);
     const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        fetchJobs(activeTab);
-    }, []);
+    
 
     const fetchJobs = async (status: string) => {
         try {
@@ -66,6 +64,10 @@ export default function JobsOverview() {
         setActiveTab(status);
         fetchJobs(status);
     };
+
+    useEffect(() => {
+        fetchJobs(activeTab);
+    });
 
     return (
         <div className="container mx-auto p-4">

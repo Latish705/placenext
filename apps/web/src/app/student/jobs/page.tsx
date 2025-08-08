@@ -75,7 +75,7 @@ export default function JobListingPage() {
 
   useEffect(() => {
     fetchJobs();
-  }, []);
+  });
 
   return (
     <div className="container mx-auto p-4 pt-10">
@@ -122,19 +122,13 @@ export default function JobListingPage() {
               <div className="p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center">
-                    {job.company_logo ? (
-                      <img
-                        src={job.company_logo}
-                        alt={`${job.company_name} logo`}
-                        className="w-10 h-10 object-contain mr-3"
-                      />
-                    ) : (
+                      
                       <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center mr-3">
                         <span className="text-lg font-medium text-gray-500 dark:text-gray-400">
                           {job.company_name.charAt(0).toUpperCase()}
                         </span>
                       </div>
-                    )}
+
                     <div>
                       <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                         {job.job_title}

@@ -190,7 +190,7 @@ const Profile = () => {
 
   useEffect(() => {
     fetchProfile();
-  }, []);
+  });
 
   const handleInputChange = (e: any) => {
     const { name, value } = e.target;
@@ -388,7 +388,7 @@ const Profile = () => {
                 </div>
                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Father's Name
+                    Father&apos;s Name
                   </label>
                   <input
                     type="text"
@@ -428,11 +428,11 @@ const Profile = () => {
                   <p className="text-lg text-gray-900 dark:text-white">{profile.dateOfBirth || "Not specified"}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Father's Name</p>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Father&apos;s Name</p>
                   <p className="text-lg text-gray-900 dark:text-white">{profile.fatherName || "Not specified"}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Mother's Name</p>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Mother&apos;s Name</p>
                   <p className="text-lg text-gray-900 dark:text-white">{profile.motherName || "Not specified"}</p>
                 </div>
               </div>

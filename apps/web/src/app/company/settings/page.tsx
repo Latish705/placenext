@@ -33,7 +33,7 @@ export default function CompanySettings() {
 
     useEffect(() => {
         fetchCompanyProfile();
-    }, []);
+    });
 
     const fetchCompanyProfile = async () => {
         try {

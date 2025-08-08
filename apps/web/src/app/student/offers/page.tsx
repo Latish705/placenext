@@ -265,7 +265,7 @@ export default function JobOffers() {
             No Job Offers Yet
           </h3>
           <p className="text-gray-500 dark:text-gray-400 mb-6">
-            You haven't received any job offers yet. Keep applying to jobs!
+            You haven&apos;t received any job offers yet. Keep applying to jobs!
           </p>
           <Button
             onClick={() => router.push('/student/applyjob')}
@@ -296,19 +296,13 @@ export default function JobOffers() {
                     onClick={() => setActiveOffer(offer)}
                   >
                     <div className="flex items-center">
-                      {offer.company_logo ? (
-                        <img
-                          src={offer.company_logo}
-                          alt={offer.company_name}
-                          className="w-10 h-10 rounded object-cover mr-3"
-                        />
-                      ) : (
+
                         <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center mr-3">
                           <span className="text-gray-500 dark:text-gray-400 font-semibold">
                             {offer.company_name.charAt(0)}
                           </span>
                         </div>
-                      )}
+                      
                       <div className="flex-1">
                         <h3 className="font-medium text-gray-800 dark:text-white">
                           {offer.job_title}
@@ -339,19 +333,12 @@ export default function JobOffers() {
               <div className="p-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
                   <div className="flex items-center mb-4 md:mb-0">
-                    {activeOffer.company_logo ? (
-                      <img
-                        src={activeOffer.company_logo}
-                        alt={activeOffer.company_name}
-                        className="w-16 h-16 rounded-lg object-cover mr-4"
-                      />
-                    ) : (
                       <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center mr-4">
                         <span className="text-gray-500 dark:text-gray-400 text-xl font-bold">
                           {activeOffer.company_name.charAt(0)}
                         </span>
                       </div>
-                    )}
+                    
                     <div>
                       <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
                         {activeOffer.job_title}

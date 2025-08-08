@@ -2,7 +2,7 @@
 import useSWR from 'swr';
 
 import { BackendUrl } from "@/utils/constants";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
@@ -34,11 +34,9 @@ export default function CompanyDashboard() {
   const [recentJobs, setRecentJobs] = useState<RecentJob[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
+  
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -95,7 +93,11 @@ export default function CompanyDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   if (loading) {
     return (

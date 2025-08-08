@@ -167,7 +167,7 @@ export default function DepartmentStatistics() {
     };
     
     initialize();
-  }, []);
+  });
 
   const handleYearChange = (year: number) => {
     setSelectedYear(year);

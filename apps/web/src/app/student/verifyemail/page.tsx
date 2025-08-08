@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {  isUserVerified, signUpWithEmail } from "@/config/firebase-config";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -33,7 +33,7 @@ export default function VerifyEmail() {
     setIsLoading(false);
   };
 
-  const checkVerification = async () => {
+  const checkVerification = useCallback(async () => {
     const email = localStorage.getItem("email");
     const token = localStorage.getItem("token");
 
@@ -70,7 +70,7 @@ export default function VerifyEmail() {
     } else {
       console.error("Email or token not found in local storage.");
     }
-  };
+  }, [router]);
 
   useEffect(() => {
     if (attempts >= maxAttempts) {
@@ -87,7 +87,7 @@ export default function VerifyEmail() {
     }, 5000);
 
     return () => clearInterval(intervalId);
-  }, [attempts, router]);
+  }, [attempts, maxAttempts, router, checkVerification]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 px-4">

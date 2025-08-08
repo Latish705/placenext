@@ -47,9 +47,7 @@ export default function JobDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchJobDetails();
-  }, [params.id]);
+  
 
   const fetchJobDetails = async () => {
     try {
@@ -87,6 +85,9 @@ export default function JobDetail() {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    fetchJobDetails();
+  }, [params.id]);
 
   const handlePromoteStudent = async (roundId: string, studentId: string) => {
     try {

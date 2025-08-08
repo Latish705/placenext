@@ -11,19 +11,21 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import firebase, {
   signInWithGoogle,
-  signUpAndVerifyEmail,
+  signInWithEmail,
+  onAuthStateChange,
 } from "@/config/firebase-config";
 
 import { useEffect, useState } from "react";
 import { IoLogoApple } from "react-icons/io5";
 import { FcGoogle } from "react-icons/fc";
+import { onAuthStateChanged } from "firebase/auth";
 
 const SignUpFormCompany = () => {
   const router = useRouter();
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const unsubscribe = firebase.auth().onAuthStateChanged((currentUser) => {
+    const unsubscribe = onAuthStateChange((currentUser) => {
       //@ts-ignore
       setUser(currentUser);
     });
@@ -33,9 +35,9 @@ const SignUpFormCompany = () => {
 
   const handleLoginWithGoogle = async () => {
     try {
-      const { token, refreshToken } = await signInWithGoogle();
+      const { token } = await signInWithGoogle();
       localStorage.setItem("token", token);
-      localStorage.setItem("refreshToken", refreshToken);
+
 
       const signCheckResponse = await axios.get(
         `${BackendUrl}/api/company/is_first_signin`,

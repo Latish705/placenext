@@ -38,7 +38,7 @@ const ApplicationForm = () => {
       }
     };
     fetchColleges();
-  }, []);
+  });
 
   // State to store form data
   const [formData, setFormData] = useState({

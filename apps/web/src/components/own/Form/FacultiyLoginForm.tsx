@@ -278,7 +278,7 @@ const SignInFormCollege = () => {
 
       <div className="mt-6 text-center space-y-2">
         <p className="text-gray-600 dark:text-gray-400">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link 
             className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors duration-200" 
             href="/authentication/facultySignup"

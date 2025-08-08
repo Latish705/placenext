@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { BackendUrl } from "@/utils/constants";
 import { useRouter } from 'next/navigation';
@@ -52,9 +52,7 @@ export default function FacultyJobsPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const router = useRouter();
 
-  useEffect(() => {
-    fetchJobs();
-  }, []);
+  
 
   // Helper to get token
   const getToken = () => {
@@ -65,7 +63,7 @@ export default function FacultyJobsPage() {
   };
 
   // Fetch all jobs (approved + pending + rejected)
-  const fetchJobs = async () => {
+  const fetchJobs = useCallback(async () => {
     setLoading(true);
     try {
       const token = getToken();
@@ -78,8 +76,11 @@ export default function FacultyJobsPage() {
       setJobs([]);
     }
     setLoading(false);
-  };
+  }, []);
 
+  useEffect(() => {
+    fetchJobs();
+  }, [fetchJobs]);
   // Accept/Reject job
   const handleAction = async (jobId: string, action: "approve" | "reject") => {
     setActionLoading(jobId + action);
@@ -130,11 +131,8 @@ export default function FacultyJobsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredJobs.map((job) => (
-            
-            
-          <button onClick={()=>{router.push(`/college/jobs/${job.job_info._id}`)}}>
+            <button key={job._id} onClick={()=>{router.push(`/college/jobs/${job.job_info._id}`)}}>
             <div
-              key={job._id}
               className="bg-white rounded-lg shadow p-6 flex flex-col gap-2"
             >
               <div className="flex justify-between items-center mb-2">

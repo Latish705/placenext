@@ -9,9 +9,12 @@ import axios from "axios";
 import { BackendUrl } from "@/utils/constants";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
-import firebase, {
+import {
   signInWithGoogle,
-  signUpAndVerifyEmail,
+  signUpWithEmail,
+  auth,
+  onAuthStateChange,
+  logout,
 } from "@/config/firebase-config";
 
 import { useEffect, useState } from "react";
@@ -23,35 +26,34 @@ const SignInFormCompany = () => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-  const unsubscribe = firebase.auth().onIdTokenChanged((currentUser) => {
-    //@ts-ignore
-    setUser(currentUser);
-  });
+    const unsubscribe = onAuthStateChange((currentUser) => {
+      //@ts-ignore
+      setUser(currentUser);
+    });
 
-  return () => unsubscribe();
-}, []);
+    return () => unsubscribe();
+  }, []);
 
 
-const handleLoginWithGoogle = async () => {
-  try {
-    await firebase.auth().signOut();
-    await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);
+  const handleLoginWithGoogle = async () => {
+    try {
+      await logout();
 
-    // Sign in with Google and get the token
-    const { token } = await signInWithGoogle();
-    localStorage.setItem("token", token);
+      // Sign in with Google and get the token
+      const { token } = await signInWithGoogle();
+      localStorage.setItem("token", token);
 
-    // Get current logged in user directly, no listeners inside this function
-    const newUser = firebase.auth().currentUser;
-    if (!newUser) {
-      console.error("No user found after Google sign-in");
-      return;
-    }
+      // Get current logged in user directly, no listeners inside this function
+      const newUser = auth.currentUser;
+      if (!newUser) {
+        console.error("No user found after Google sign-in");
+        return;
+      }
 
-    const idToken = await newUser.getIdToken();
-    const email = newUser.email ?? "";
+      const idToken = await newUser.getIdToken();
+      const email = newUser.email ?? "";
 
-    localStorage.setItem("company_email", email);
+      localStorage.setItem("company_email", email);
 
     // Check if first sign-in
     const signCheckResponse = await axios.get(

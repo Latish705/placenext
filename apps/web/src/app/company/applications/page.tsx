@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { BackendUrl } from '@/utils/constants';
@@ -43,15 +43,10 @@ export default function CompanyApplications() {
     const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'accepted' | 'rejected'>('all');
     const [searchTerm, setSearchTerm] = useState('');
 
-    useEffect(() => {
-        fetchApplications();
-    }, []);
 
-    useEffect(() => {
-        filterApplications();
-    }, [applications, activeFilter, searchTerm]);
+    
 
-    const fetchApplications = async () => {
+    const fetchApplications = useCallback(async () => {
         try {
             const token = localStorage.getItem('token');
             if (!token) {
@@ -129,9 +124,10 @@ export default function CompanyApplications() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [router]);
 
-    const filterApplications = () => {
+
+    const filterApplications = useCallback(() => {
         let filtered = applications;
 
         if (activeFilter !== 'all') {
@@ -148,7 +144,7 @@ export default function CompanyApplications() {
         }
 
         setFilteredApplications(filtered);
-    };
+    }, [applications, activeFilter, searchTerm]);
 
     const handleApplicationAction = async (applicationId: string, action: 'accept' | 'reject') => {
         try {
@@ -182,6 +178,14 @@ export default function CompanyApplications() {
             alert(`Failed to ${action} application`);
         }
     };
+
+    useEffect(() => {
+        fetchApplications();
+    }, [fetchApplications]);
+
+    useEffect(() => {
+        filterApplications();
+    }, [applications, activeFilter, searchTerm, filterApplications]);
 
     if (loading) {
         return (

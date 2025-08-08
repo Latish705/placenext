@@ -49,10 +49,7 @@ export default function JobDetail() {
   console.log('Job ID from params:', params.id);
   console.log('Job ID from params:', params.job_id);
   console.log('Job ID from params:', params);
-  useEffect(() => {
-    fetchJobDetails();
-  }, [params.job_id]);
-
+  
   const fetchJobDetails = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -89,6 +86,11 @@ export default function JobDetail() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchJobDetails();
+  });
+
 
   // const handlePromoteStudent = async (roundId: string, studentId: string) => {
   //   try {

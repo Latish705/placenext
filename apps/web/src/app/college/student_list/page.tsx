@@ -67,7 +67,7 @@ export default function StudentList() {
 
   useEffect(() => {
     fetchStudents();
-  }, [filter, isFilterApplied]);
+  }, [filter, isFilterApplied,fetchStudents]);
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const updatedFilter = {
