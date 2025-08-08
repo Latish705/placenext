@@ -11,6 +11,7 @@ import Application from "../models/application";
 import { jobs } from "googleapis/build/src/apis/jobs";
 import CollegeJobLink from "../../job/models/collegeJobLink";
 import Company from "../../company/models/company";
+import Department from "../../college/models/department";
 const requiredFields = [
   "firstName",
   "middleName",
@@ -35,11 +36,11 @@ const requiredFields = [
   "panNumber",
   "liveBacklogs",
   "deadBacklogs",
-  "placementStatus",
-  "skills", 
-  "linkedIn",
-  "github",
-  "collegeId",
+  // "placementStatus",
+  // "skills", 
+  "linkedInLink",
+  "githubLink",
+  // "collegeId",
 ];
 
 // Helper function to upload file and handle errors
@@ -194,8 +195,8 @@ export const applicationFrom = async (req: Request, res: Response) => {
       // stud_placement_company: fields.placementCompany, // this is remaining
       // stud_placement_date: fields.placementDate, // this is remaining
       // student_skills: fields.skills, // this is remaining
-      // stud_linkedIn: fields.linkedIn, // this is remaining
-      // stud_github: fields.github, // this is remaining
+      stud_linkedIn: fields.linkedInLink, // this is remaining
+      stud_github: fields.githubLink, // this is remaining
     });
 
     const savedStudentInfo = await studentInfo.save();
@@ -221,12 +222,12 @@ export const applicationFrom = async (req: Request, res: Response) => {
       savedStudent.id
     );
 
-    const doc_res = await axios.post(`${Document_server_url}/verify_user`, {
-      userId: savedStudent.id,
-    });
-    if (doc_res.data.success) {
-      console.log("User added for verified successfully");
-    }
+    // const doc_res = await axios.post(`${Document_server_url}/verify_user`, {
+    //   userId: savedStudent.id,
+    // });
+    // if (doc_res.data.success) {
+    //   console.log("User added for verified successfully");
+    // }
 
     return res.status(200).json({
       success: true,
@@ -241,23 +242,38 @@ export const applicationFrom = async (req: Request, res: Response) => {
 
 export const getAllCollegeList = async (req: Request, res: Response) => {
   try {
-    const colleges = await College.find({}, "coll_name");
+    // 1. Get all colleges first.
+    const colleges = await College.find();
 
-    const collegeList = colleges.map((college: any) => ({
-      id: college._id,
-      name: college.coll_name,
-    }));
+    // 2. Create an array of promises. The `map` now returns a promise for each college.
+    const collegeListPromises = colleges.map(async (college:any) => {
+      // 3. For each college, `await` the department query.
+      const departmentsForCollege = await Department.find({ collegeId: college._id }).select('dept_name');
+
+      // 4. Return the final, structured object for this college.
+      return {
+        id: college._id,
+        name: college.coll_name,
+        departments: departmentsForCollege.map((dept:any) => ({
+          id: dept._id,
+          name: dept.dept_name
+        }))
+      };
+    });
+
+    // 5. Use Promise.all to wait for ALL the promises in the array to resolve.
+    const collegeList = await Promise.all(collegeListPromises);
 
     return res.status(200).json({ success: true, colleges: collegeList });
+
   } catch (error: any) {
     console.error("Error in getAllCollegeList:", error.stack || error.message);
-
-    // Return a standardized error response
     return res
       .status(500)
       .json({ success: false, message: "Internal Server Error" });
   }
 };
+
 
 export const getUserDetails = async (req: Request, res: Response) => {
   try {

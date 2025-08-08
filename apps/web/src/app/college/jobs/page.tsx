@@ -131,6 +131,7 @@ export default function FacultyJobsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredJobs.map((job) => (
             
+            
           <button onClick={()=>{router.push(`/college/jobs/${job.job_info._id}`)}}>
             <div
               key={job._id}
@@ -146,7 +147,7 @@ export default function FacultyJobsPage() {
                   {statusLabels[job.status] || job.status}
                 </span>
               </div>
-              <div className="text-gray-600">Company: {job.job_info.company_name.comp_name}</div>
+              {/* <div className="text-gray-600">Company: {job.job_info.company_name.comp_name}</div> */}
               <div className="text-gray-600">Salary: {job.job_info.job_salary}</div>
               <div className="flex gap-2 mt-2">
                 <button

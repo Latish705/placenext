@@ -10,22 +10,28 @@ import Link from "next/link";
 import { FcGoogle } from "react-icons/fc";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
+import { FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
+import { User } from "firebase/auth";
 
-import firebase, {
+import {
   signInWithGoogle,
-  signUpAndVerifyEmail,
+  signUpWithEmail,
+  onAuthStateChange,
 } from "@/config/firebase-config";
 import { BackendUrl } from "@/utils/constants";
 
 const SignUpFormStudent = () => {
   const router = useRouter();
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [signupError, setSignupError] = useState("");
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     watch,
   } = useForm({
     resolver: zodResolver(SignValidation),
@@ -42,27 +48,28 @@ const SignUpFormStudent = () => {
   const confirmPassword = watch("confirm_password");
 
   useEffect(() => {
-    const unsubscribe = firebase.auth().onAuthStateChanged((currentUser) => {
-      //@ts-ignore
+    const unsubscribe = onAuthStateChange((currentUser) => {
       setUser(currentUser);
     });
 
     return () => unsubscribe();
   }, []);
 
-  const onSubmit = async (data: any) => {
-    const { email, password, confirm_password } = data;
+  const onSubmit = async ({ email, password, confirm_password }: any) => {
     setIsLoading(true);
+    setSignupError("");
 
     if (password !== confirm_password) {
+      setSignupError("Passwords do not match");
       toast.error("Passwords do not match");
       setIsLoading(false);
       return;
     }
 
     try {
-      // 1. Sign up and send email verification
-      const token = await signUpAndVerifyEmail(email, password);
+      // 1. Sign up with Firebase and send email verification
+      const user = await signUpWithEmail(email, password);
+      const token = await user.getIdToken();
 
       // 2. Store token/email in localStorage
       localStorage.setItem("token", token);
@@ -71,16 +78,25 @@ const SignUpFormStudent = () => {
       // 3. Notify backend
       const response = await axios.post(
         `${BackendUrl}/api/student/signup_with_email`,
-        { email }
+        { email },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       if (response.data.success) {
         toast.success("Registration successful! Please verify your email.");
         router.push("/student/verifyemail");
+      } else {
+        throw new Error(response.data.message || "Registration failed");
       }
     } catch (error: any) {
-      console.error("Signup error:", error.message);
-      toast.error(error.message || "Signup failed. Please try again.");
+      console.error("Signup error:", error);
+      const errorMessage = error.response?.data?.message || error.message || "Signup failed. Please try again.";
+      setSignupError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -88,11 +104,11 @@ const SignUpFormStudent = () => {
 
   const handleLoginWithGoogle = async () => {
     setIsLoading(true);
+    setSignupError("");
+    
     try {
-      const { token, refreshToken } = await signInWithGoogle();
-
+      const { token } = await signInWithGoogle();
       localStorage.setItem("token", token);
-      localStorage.setItem("refreshToken", refreshToken);
 
       const signCheckResponse = await axios.get(
         `${BackendUrl}/api/student/is_first_signin`,
@@ -122,7 +138,9 @@ const SignUpFormStudent = () => {
       }
     } catch (error: any) {
       console.error("Google login error:", error);
-      toast.error(error.message || "Google login failed. Please try again.");
+      const errorMessage = error.response?.data?.message || error.message || "Google login failed. Please try again.";
+      setSignupError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

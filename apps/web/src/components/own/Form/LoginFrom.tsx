@@ -8,23 +8,20 @@ import { useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import firebase, {
-  signInWithGoogle,
-  signInWithEmailPassword
-} from "@/config/firebase-config";
+import { signInWithGoogle, signInWithEmail, onAuthStateChange } from "@/config/firebase-config";
 import { toast } from "react-toastify";
 import { FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
+import { User } from "firebase/auth";
 
 const LoginForm = () => {
   const router = useRouter();
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState("");
 
   useEffect(() => {
-    const unsubscribe = firebase.auth().onAuthStateChanged((currentUser) => {
-      //@ts-ignore
+    const unsubscribe = onAuthStateChange((currentUser) => {
       setUser(currentUser);
     });
 
@@ -36,9 +33,8 @@ const LoginForm = () => {
     setLoginError("");
     
     try {
-      const { token, refreshToken } = await signInWithGoogle();
+      const { token } = await signInWithGoogle();
       localStorage.setItem("token", token);
-      localStorage.setItem("refreshToken", refreshToken);
 
       const signCheckResponse = await axios.get(
         `${BackendUrl}/api/student/is_first_signin`,
@@ -48,6 +44,8 @@ const LoginForm = () => {
           },
         }
       );
+
+      console.log("Sign check response:", signCheckResponse.data);
 
       if (token) {
         const response = await axios.post(
@@ -61,17 +59,28 @@ const LoginForm = () => {
         );
 
         if (signCheckResponse.data.isFirstSignIn) {
-          router.push("/student/applicationform");
+          // Store user info for application form
+          localStorage.setItem("email", response.data.user?.email || "");
+          localStorage.setItem("name", response.data.user?.name || "");
+          
           toast.success("Welcome! Please complete your profile");
+          router.push("/student/applicationform");
         } else if (response.data.success) {
+          // Store user info in localStorage
+          localStorage.setItem("email", response.data.user?.email || "");
+          localStorage.setItem("name", response.data.user?.name || "");
+          
           toast.success("Login successful!");
           router.push("/student/dashboard");
+        } else {
+          throw new Error(response.data.message || "Login failed");
         }
       }
-    } catch (error) {
-      console.error("Error during login:", error);
-      setLoginError("Google login failed. Please try again or use email login.");
-      toast.error("Login failed. Please try again.");
+    } catch (error: any) {
+      console.error("Error during Google login:", error);
+      const errorMessage = error.response?.data?.message || error.message || "Google login failed. Please try again.";
+      setLoginError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -80,7 +89,7 @@ const LoginForm = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(LoginValidation),
   });
@@ -90,10 +99,9 @@ const LoginForm = () => {
     setLoginError("");
     
     try {
-      const { token, refreshToken } = await signInWithEmailPassword(data.email, data.password);
+      const { token } = await signInWithEmail(data.email, data.password);
       localStorage.setItem("token", token);
-      localStorage.setItem("refreshToken", refreshToken);
-      
+
       const response = await axios.post(
         `${BackendUrl}/api/student/login_with_email`,
         { email: data.email },
@@ -113,17 +121,27 @@ const LoginForm = () => {
         }
       );
       
-      if (userCheck.data.isFirstSignIn) {
-        toast.success("Welcome! Please complete your profile");
-        router.push("/student/applicationform");
+      if (response.data.success) {
+        // Store user info in localStorage
+        localStorage.setItem("email", response.data.user?.email || data.email);
+        localStorage.setItem("name", response.data.user?.name || "");
+        localStorage.setItem("refreshToken", response.data.refreshToken || "");
+        
+        if (userCheck.data.isFirstSignIn) {
+          toast.success("Welcome! Please complete your profile");
+          router.push("/student/applicationform");
+        } else {
+          toast.success("Login successful!");
+          router.push("/student/dashboard");
+        }
       } else {
-        toast.success("Login successful!");
-        router.push("/student/dashboard");
+        throw new Error(response.data.message || "Login failed");
       }
     } catch (error: any) {
       console.error("Login error:", error);
-      setLoginError(error.message || "Invalid email or password. Please try again.");
-      toast.error(error.message || "Login failed. Please check your credentials.");
+      const errorMessage = error.response?.data?.message || error.message || "Login failed. Please check your credentials.";
+      setLoginError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

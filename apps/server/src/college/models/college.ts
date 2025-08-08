@@ -49,9 +49,12 @@ const CollegeSchema = new Schema<ICollege>({
     type: String,
     required: true,
   },
-  coll_departments: {
-    type: [String],
-  },
+  coll_departments: [ 
+    {
+      type: Schema.Types.ObjectId, 
+      ref: 'Department'             
+    }
+  ],
   coll_no_of_stud: {
     type: Number,
     required: true,
