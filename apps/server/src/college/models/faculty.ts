@@ -2,7 +2,7 @@ import { Schema, model } from "mongoose";
 import bcrypt from "bcrypt";
 import mongoose from "mongoose";
 import { IDepartment } from "./department";
-import jwt from "jsonwebtoken";
+import jwt, { SignOptions } from "jsonwebtoken";
 import { ICollege } from "./college";
 import { primarydb } from "../..";
 
@@ -111,21 +111,26 @@ FacultySchema.methods.comparePassword = async function (
   return await bcrypt.compare(candidatePassword, this.faculty_password);
 };
 
-FacultySchema.methods.generateRefreshToken = function () {
+FacultySchema.methods.generateRefreshToken = function (): string {
   return jwt.sign(
     { _id: this._id, email: this.faculty_email },
-    process.env.JWT_REFRESH_TOKEN!,
+    process.env.JWT_REFRESH_TOKEN as string, // ✅ ensure it's string
     {
-      expiresIn: process.env.JWT_REFRESH_EXPIRE!,
-    }
+      expiresIn: process.env.JWT_REFRESH_EXPIRE as string, // ✅ cast to string
+    } as SignOptions
   );
 };
 
-FacultySchema.methods.generateAccessToken = function () {
-  return jwt.sign({ _id: this._id }, process.env.JWT_ACCESS_TOKEN!, {
-    expiresIn: process.env.JWT_ACCESS_EXPIRE!,
-  });
+FacultySchema.methods.generateAccessToken = function (): string {
+  return jwt.sign(
+    { _id: this._id },
+    process.env.JWT_ACCESS_TOKEN as string, // ✅ ensure it's string
+    {
+      expiresIn: process.env.JWT_ACCESS_EXPIRE as string, // ✅ cast to string
+    } as SignOptions
+  );
 };
+
 
 const Faculty = primarydb.model("Faculty", FacultySchema);
 export default Faculty;
