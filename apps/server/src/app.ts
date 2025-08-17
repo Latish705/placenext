@@ -23,8 +23,15 @@ export const Document_server_url: string =
 //   // }
 // );
 
+const allowedOrigins = ["http://localhost:3000", process.env.CLIENT_URL].filter(Boolean) as (string | RegExp)[];
+
 app.use(cors({
-  origin:"http://localhost:3000"
+  origin: allowedOrigins,
+  credentials: true,
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+  allowedHeaders: ["Content-Type", "Authorization"]
 }))
 
 app.use(express.json());
